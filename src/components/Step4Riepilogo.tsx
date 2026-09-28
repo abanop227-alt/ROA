@@ -111,6 +111,11 @@ export default function Step4Riepilogo(p: Props) {
                     ×
                   </button>
                 </div>
+                <p className="origine muto piccolo">
+                  {r.origine === 'voce'
+                    ? `↳ da: ${voci.find((v) => v.key === r.voceKey)?.titolo ?? 'frase'}`
+                    : '↳ riga aggiunta al computo'}
+                </p>
                 <div className="computo-numeri">
                   <label className="campo">
                     <span className="campo-etichetta">U.M.</span>

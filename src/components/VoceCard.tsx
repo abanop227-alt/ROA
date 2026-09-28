@@ -1,8 +1,91 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { contaSegnaposto, famigliaDi } from '../lib/catalogo';
-import type { Catalogo, VoceIstanza } from '../lib/types';
+import type { Catalogo, RigaComputo, VoceIstanza } from '../lib/types';
+import { nuovoId } from '../lib/util';
 import { AreaTesto, Campo } from './Campo';
 import FotoVoce from './FotoVoce';
+
+/** Voci di computo collegate alla frase: spuntando la frase entrano nel computo metrico. */
+function ComputoVoce({
+  voce,
+  catalogo,
+  onModifica,
+}: {
+  voce: VoceIstanza;
+  catalogo: Catalogo;
+  onModifica: (f: (v: VoceIstanza) => VoceIstanza) => void;
+}) {
+  const [nuova, setNuova] = useState('');
+  const set = (key: string, campi: Partial<RigaComputo>) =>
+    onModifica((v) => ({ ...v, lavorazioni: v.lavorazioni.map((l) => (l.key === key ? { ...l, ...campi } : l)) }));
+  const tutte = [...catalogo.lavorazioniComuni, ...catalogo.famiglie.flatMap((f) => f.sezioni.flatMap((s) => s.voci.flatMap((x) => x.lavorazioni)))];
+
+  function aggiungi() {
+    const d = nuova.trim();
+    if (!d) return;
+    const um = tutte.find((l) => l.descrizione === d)?.um ?? 'a corpo';
+    onModifica((v) => ({
+      ...v,
+      lavorazioni: [...v.lavorazioni, { key: nuovoId('l-'), descrizione: d, um, quantita: '', prezzo: '', inclusa: true }],
+    }));
+    setNuova('');
+  }
+
+  return (
+    <fieldset className="computo-voce">
+      <legend>Voce del computo</legend>
+      {!voce.selezionata && voce.lavorazioni.length > 0 && (
+        <p className="muto piccolo">Entra nel computo quando spunti la frase.</p>
+      )}
+      {voce.lavorazioni.map((l) => (
+        <div key={l.key} className={`lavorazione ${l.inclusa ? '' : 'esclusa'}`}>
+          <label className="riga-check">
+            <input type="checkbox" checked={l.inclusa} onChange={(e) => set(l.key, { inclusa: e.target.checked })} />
+            <span>{l.descrizione}</span>
+          </label>
+          {l.inclusa && (
+            <div className="lavorazione-numeri">
+              <label className="campo">
+                <span className="campo-etichetta">U.M.</span>
+                <select value={l.um} onChange={(e) => set(l.key, { um: e.target.value })}>
+                  {(catalogo.umOptions.includes(l.um) ? catalogo.umOptions : [...catalogo.umOptions, l.um]).map((u) => (
+                    <option key={u}>{u}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="campo">
+                <span className="campo-etichetta">Q.tà</span>
+                <input inputMode="decimal" value={l.quantita} onChange={(e) => set(l.key, { quantita: e.target.value })} />
+              </label>
+              <label className="campo">
+                <span className="campo-etichetta">Prezzo €</span>
+                <input inputMode="decimal" value={l.prezzo} placeholder="—" onChange={(e) => set(l.key, { prezzo: e.target.value })} />
+              </label>
+            </div>
+          )}
+        </div>
+      ))}
+      <div className="aggiungi-riga">
+        <input
+          list="lavorazioni-libreria"
+          value={nuova}
+          onChange={(e) => setNuova(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && aggiungi()}
+          placeholder="Aggiungi voce di computo…"
+          aria-label="Nuova voce di computo"
+        />
+        <button className="btn" onClick={aggiungi} disabled={!nuova.trim()}>
+          Aggiungi
+        </button>
+      </div>
+      <datalist id="lavorazioni-libreria">
+        {Array.from(new Set(tutte.map((l) => l.descrizione))).map((d) => (
+          <option key={d} value={d} />
+        ))}
+      </datalist>
+    </fieldset>
+  );
+}
 
 interface Props {
   voce: VoceIstanza;
@@ -61,6 +144,7 @@ export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri
             {voce.selezionata && segnaposto > 0 && <span className="badge badge-avviso">{segnaposto} [ ] da completare</span>}
             {voce.fotoIds.length > 0 && <span className="badge">📷 {voce.fotoIds.length}</span>}
             {voce.note.trim() && <span className="badge">appunti</span>}
+            {voce.selezionata && lavorazioni > 0 && <span className="badge">€ computo · {lavorazioni}</span>}
           </span>
         </button>
         <span className="chevron" aria-hidden onClick={onApri}>
@@ -112,10 +196,9 @@ export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri
             <AreaTesto valore={voce.note} onValore={(v) => set('note', v)} rows={2} placeholder="Misure, promemoria…" />
           </label>
 
-          {voce.lavorazioni.length > 0 && (
-            <p className="muto piccolo">
-              Computo: {lavorazioni} lavorazion{lavorazioni === 1 ? 'e' : 'i'} proposte (quantità e prezzi al passo 4).
-            </p>
+          <ComputoVoce voce={voce} catalogo={catalogo} onModifica={onModifica} />
+          {lavorazioni === 0 && voce.lavorazioni.length === 0 && (
+            <p className="muto piccolo">Questa frase non ha voci di computo: aggiungine una se prevede un intervento.</p>
           )}
 
           {voce.personalizzata && (

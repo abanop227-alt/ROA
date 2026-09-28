@@ -191,6 +191,25 @@ describe('generazione del .docx', () => {
     expect(due[1] / due[0]).toBeCloseTo(90 / 60, 2);
   });
 
+  it('indice già compilato come le ROA: una riga per titolo con numero, puntini e pagina', async () => {
+    const { xml } = await apri(esempio());
+    const sdt = /<w:sdt>[\s\S]*?<\/w:sdt>/.exec(xml)![0];
+    expect(sdt).toContain('TOC \\h \\o &quot;1-4&quot;');
+    const righe = [...sdt.matchAll(/<w:p>[\s\S]*?<\/w:p>/g)]
+      .map((p) => p[0])
+      .filter((p) => /w:pStyle w:val="TOC\d"/.test(p))
+      .map((p) => [...p.matchAll(/<w:t(?: [^>]*)?>([^<]*)<\/w:t>/g)].map((t) => t[1]));
+    expect(righe[0]).toEqual(['1', 'PARTE GENERALE', '3']);
+    const titoli = righe.map((r) => `${r[0]} ${r[1]}`);
+    for (const t of ['2 ESPOSIZIONE DELLA CONSULENZA', '2.1.2.2 Vano scala B', '3.2 ATTIVITA’ “77.1.A”', '5 COMPUTO METRICO DELLE OPERE']) {
+      expect(titoli).toContain(t);
+    }
+    // pagine non decrescenti, l'esposizione su una pagina nuova
+    const pagine = righe.map((r) => Number(r[2]));
+    expect(pagine.every((p, i) => i === 0 || p >= pagine[i - 1])).toBe(true);
+    expect(pagine[titoli.indexOf('2 ESPOSIZIONE DELLA CONSULENZA')]).toBeGreaterThan(3);
+  });
+
   it('carta intestata: immagine a pagina intera dietro al testo nell’intestazione', async () => {
     const buf = await Packer.toBuffer(
       await creaDocumento(esempio(), cat, tecnico, carica, { cartaIntestata: { data: jpg, width: 160, height: 226 } }),

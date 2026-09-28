@@ -69,6 +69,66 @@ const TAB_TITOLO = 709;
 
 type Allineamento = (typeof AlignmentType)[keyof typeof AlignmentType];
 
+// ---------- stima dell'impaginazione (numeri di pagina dell'indice già compilato) ----------
+const ALTEZZA_UTILE = PAGINA_H - M_SUP - M_INF; // 14144 twip
+const RIGA = 317; // Arial 12, interlinea 1,15
+const CARATTERI_RIGA = 86; // media per riga a tutta larghezza, Arial 12
+
+export interface VoceIndice {
+  numero: string;
+  testo: string;
+  livello: number;
+  pagina: number;
+}
+
+/** Tiene il conto approssimativo di dove cade ogni titolo: serve solo a precompilare l'indice. */
+class Impaginazione {
+  pagina = 1;
+  y = 0;
+  voci: VoceIndice[] = [];
+  private scorri() {
+    while (this.y > ALTEZZA_UTILE) {
+      this.pagina++;
+      this.y -= ALTEZZA_UTILE;
+    }
+  }
+  spazio(tw: number) {
+    this.y += tw;
+    this.scorri();
+  }
+  testo(t: string, o: { left?: number; size?: number; before?: number; after?: number; line?: number } = {}) {
+    const size = o.size ?? CORPO;
+    const perRiga = (CARATTERI_RIGA * (LARGHEZZA_UTILE - (o.left ?? 0))) / LARGHEZZA_UTILE * (CORPO / size);
+    const n = Math.max(1, Math.ceil(t.length / perRiga));
+    this.spazio((o.before ?? 0) + n * (o.line ?? RIGA) * (size / CORPO) + (o.after ?? 0));
+  }
+  /** blocco che non si spezza (foto): se non ci sta va alla pagina dopo */
+  blocco(h: number) {
+    if (this.y > 0 && this.y + h > ALTEZZA_UTILE) {
+      this.pagina++;
+      this.y = 0;
+    }
+    this.spazio(h);
+  }
+  salto() {
+    if (this.y > 0) {
+      this.pagina++;
+      this.y = 0;
+    }
+  }
+  titolo(numero: string, testo: string, livello: number) {
+    const h = 240 + 346 + 240;
+    if (this.y > 0 && this.y + h + 2 * RIGA > ALTEZZA_UTILE) {
+      this.pagina++;
+      this.y = 0;
+    }
+    this.voci.push({ numero, testo, livello, pagina: this.pagina });
+    this.spazio(h);
+  }
+}
+
+let imp: Impaginazione | null = null;
+
 // ---------- utilità ----------
 
 export function tipoImmagine(data: Uint8Array): 'jpg' | 'png' | null {
@@ -115,6 +175,7 @@ interface OpzPar extends OpzRun {
 
 function par(testo: string, opz: OpzPar = {}): Paragraph {
   const { after = 240, before = 0, align = AlignmentType.JUSTIFIED, left, keepNext, ...r } = opz;
+  imp?.testo(testo, { left, size: r.size, before, after });
   return new Paragraph({
     alignment: align,
     spacing: { before, after },
@@ -128,10 +189,19 @@ function paragrafi(testo: string, opz: OpzPar = {}): Paragraph[] {
   return righe(testo).map((r) => par(r, opz));
 }
 
-const vuoto = (after = 0) => new Paragraph({ spacing: { after }, children: [] });
+function vuoto(after = 0): Paragraph {
+  imp?.spazio(RIGA + after);
+  return new Paragraph({ spacing: { after }, children: [] });
+}
+
+function saltoPagina(): Paragraph {
+  imp?.salto();
+  return new Paragraph({ children: [new PageBreak()] });
+}
 
 function titolo(numero: string, testo: string, livello: 1 | 2 | 3 | 4): Paragraph {
   const heading = [HeadingLevel.HEADING_1, HeadingLevel.HEADING_2, HeadingLevel.HEADING_3, HeadingLevel.HEADING_4][livello - 1];
+  imp?.titolo(numero, testo, livello);
   return new Paragraph({
     heading,
     tabStops: [
@@ -143,12 +213,13 @@ function titolo(numero: string, testo: string, livello: 1 | 2 | 3 | 4): Paragrap
 }
 
 /** Elenchi del modello (vedi numbering in creaDocumento). */
-function elenco(reference: string, children: ParagraphChild[], opz: { level?: number; instance?: number; after?: number } = {}): Paragraph {
+function elenco(reference: string, testo: string, opz: { level?: number; instance?: number; after?: number; left?: number } = {}): Paragraph {
+  imp?.testo(testo, { left: opz.left ?? 720, after: opz.after ?? 0 });
   return new Paragraph({
     numbering: { reference, level: opz.level ?? 0, ...(opz.instance !== undefined ? { instance: opz.instance } : {}) },
     alignment: AlignmentType.JUSTIFIED,
     spacing: { after: opz.after ?? 0 },
-    children,
+    children: runs(testo),
   });
 }
 
@@ -188,6 +259,7 @@ function cella(
 }
 
 function bloccoFirma(tecnico: Tecnico, data: string): Table {
+  imp?.spazio(4 * RIGA);
   const w = [5462, LARGHEZZA_UTILE - 5462];
   const luogoData = `${tecnico.luogo.trim() || '[luogo]'}, ${dataItaliana(data) || '[data]'}`;
   return new Table({
@@ -292,9 +364,14 @@ function bloccoFoto(immagini: Immagine[], numeri: number[], didascalia: string):
       if (j) children.push(new TextRun('      '));
       children.push(new ImageRun({ type: tipo, data: f.data, transformation: misuraFoto(f, inCoppia) }));
     });
+    const alta = Math.max(...immagini.slice(i, i + 2).map(({ f }) => misuraFoto(f, inCoppia).height));
+    imp?.blocco(alta * 15 + 240 + (i + 2 >= immagini.length ? RIGA + 240 : 0));
     out.push(new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, spacing: { before: 120, after: 120 }, children }));
   }
+  const stima = imp;
+  imp = null; // la didascalia è già compresa nel blocco dell'ultima riga di foto
   out.push(par(didascaliaFoto(numeri, didascalia), { bold: true, italics: true, align: AlignmentType.CENTER }));
+  imp = stima;
   return out;
 }
 
@@ -343,7 +420,24 @@ async function copertina(s: Sopralluogo, carica: CaricaFoto): Promise<Paragraph[
   ];
 }
 
-function indice(): (Paragraph | TableOfContents)[] {
+/**
+ * Indice come nelle ROA dello studio: una riga per titolo con numero, testo, puntini e pagina,
+ * già compilato (si vede anche sul telefono). Aprendo il file, Word propone di aggiornarlo.
+ */
+function indice(voci: VoceIndice[], primaPagina: number): (Paragraph | TableOfContents)[] {
+  const righeIndice = voci.map(
+    (v) =>
+      new Paragraph({
+        style: `TOC${Math.min(v.livello, 4)}`,
+        children: [
+          new TextRun({ text: v.numero }),
+          new TextRun({ children: [new Tab()] }),
+          new TextRun({ text: v.testo, italics: v.livello === 4 }),
+          new TextRun({ children: [new Tab()] }),
+          new TextRun({ text: String(v.pagina + primaPagina - 1) }),
+        ],
+      }),
+  );
   return [
     new Paragraph({ children: [new PageBreak()] }),
     new Paragraph({
@@ -351,7 +445,7 @@ function indice(): (Paragraph | TableOfContents)[] {
       spacing: { after: 240 },
       children: [new TextRun({ text: 'INDICE', bold: true, size: 40 })],
     }),
-    new TableOfContents('Indice', { hyperlink: true, headingStyleRange: '1-4' }),
+    new TableOfContents('Indice', { hyperlink: true, headingStyleRange: '1-4', contentChildren: righeIndice }),
     new Paragraph({ children: [new PageBreak()] }),
   ];
 }
@@ -375,6 +469,7 @@ function parteGenerale(s: Sopralluogo, tecnico: Tecnico): (Paragraph | Table)[] 
   ];
   const compilati = campi.filter(([, v]) => v && v.trim());
   if (compilati.length) {
+    imp?.spazio(compilati.length * 420);
     // tabella senza bordi, interlinea 1,5
     const w1 = 1767;
     const w2 = LARGHEZZA_UTILE - 218 - w1;
@@ -419,7 +514,7 @@ function parteGenerale(s: Sopralluogo, tecnico: Tecnico): (Paragraph | Table)[] 
 
 async function esposizione(s: Sopralluogo, catalogo: Catalogo, carica: CaricaFoto): Promise<Paragraph[]> {
   const out: Paragraph[] = [
-    new Paragraph({ children: [new PageBreak()] }),
+    saltoPagina(),
     titolo('2', 'ESPOSIZIONE DELLA CONSULENZA', 1),
     ...paragrafi(catalogo.testi.esposizione),
     titolo('2.1', 'ADEGUAMENTI', 2),
@@ -444,7 +539,7 @@ async function esposizione(s: Sopralluogo, catalogo: Catalogo, carica: CaricaFot
           const ultima = k === r.length - 1;
           out.push(
             k === 0
-              ? elenco('lettere', runs(riga), { instance: istanzaLettere, after: ultima && !immagini.length ? 240 : 0 })
+              ? elenco('lettere', riga, { instance: istanzaLettere, after: ultima && !immagini.length ? 240 : 0, left: 360 })
               : par(riga, { left: 360, after: ultima && !immagini.length ? 240 : 0 }),
           );
         });
@@ -457,7 +552,7 @@ async function esposizione(s: Sopralluogo, catalogo: Catalogo, carica: CaricaFot
   const cartelli = s.cartelli.filter((c) => c.descrizione.trim());
   if (cartelli.length) {
     out.push(titolo('2.2', 'ORDINE CARTELLI E SEGNALETICA DI SICUREZZA', 2));
-    for (const c of cartelli) out.push(elenco('puntini', runs(`n° ${c.quantita.trim() || '[quantità]'} ${c.descrizione.trim()}`), { after: 120 }));
+    for (const c of cartelli) out.push(elenco('puntini', `n° ${c.quantita.trim() || '[quantità]'} ${c.descrizione.trim()}`, { after: 120, left: 501 }));
   }
   return out;
 }
@@ -470,8 +565,8 @@ function certificazioni(s: Sopralluogo, catalogo: Catalogo): Paragraph[] {
     out.push(titolo(`3.${i + 1}`, `ATTIVITA’ “${a.codice}”`, 2));
     // 1), 2), 3)… ripartono per ogni attività; sottopunti con la freccia ➢
     for (const c of a.certificazioni.filter((x) => x.richiesta)) {
-      out.push(elenco('numeri', runs(c.testo), { instance: i + 1 }));
-      c.sotto.forEach((x) => out.push(elenco('frecce', runs(x))));
+      out.push(elenco('numeri', c.testo, { instance: i + 1 }));
+      c.sotto.forEach((x) => out.push(elenco('frecce', x, { left: 2149 })));
       testoUsato += c.testo + c.sotto.join('');
     }
     out.push(vuoto(240));
@@ -502,6 +597,7 @@ function computo(s: Sopralluogo, catalogo: Catalogo, tecnico: Tecnico): (Paragra
   const J = AlignmentType.JUSTIFIED;
   const qta = (t: string) => (t.trim() ? (/^[\d.,\s]+$/.test(t.trim()) ? formatQuantita(parseNumero(t)) : t.trim()) : '');
   for (const z of zone) {
+    imp?.spazio(z.righe.reduce((h, r) => h + Math.max(1, Math.ceil(r.descrizione.length / 44)) * RIGA + 40, 2 * RIGA + 80));
     out.push(par(z.etichetta, { bold: true, after: 120, before: 120, align: AlignmentType.LEFT, keepNext: true }));
     out.push(
       new Table({
@@ -611,15 +707,28 @@ export async function creaDocumento(
   carica: CaricaFoto,
   opz: OpzioniDocumento = {},
 ): Promise<Document> {
+  // il corpo si costruisce per primo, stimando dove cade ogni titolo
+  const stima = new Impaginazione();
+  imp = stima;
+  let corpo: (Paragraph | Table)[];
+  try {
+    corpo = [
+      ...parteGenerale(s, tecnico),
+      ...(await esposizione(s, catalogo, carica)),
+      ...certificazioni(s, catalogo),
+      ...conclusioni(s, catalogo),
+      ...computo(s, catalogo, tecnico),
+    ];
+  } finally {
+    imp = null;
+  }
+  // pagina 1 frontespizio, poi l'indice (una pagina ogni ~20 righe)
+  const pagineIndice = Math.max(1, Math.ceil((stima.voci.length * (360 + RIGA) + 1200) / ALTEZZA_UTILE));
   const children = [
     ...frontespizio(s),
     ...(await copertina(s, carica)),
-    ...indice(),
-    ...parteGenerale(s, tecnico),
-    ...(await esposizione(s, catalogo, carica)),
-    ...certificazioni(s, catalogo),
-    ...conclusioni(s, catalogo),
-    ...computo(s, catalogo, tecnico),
+    ...indice(stima.voci, 2 + pagineIndice),
+    ...corpo,
   ];
 
   // Titoli come nel modello: Arial 12; capitoli in grassetto sottolineato, attività sottolineate,
@@ -641,18 +750,19 @@ export async function creaDocumento(
     paragraph: { spacing: { before: 240, after: 240, line: 288 }, keepNext: true, keepLines: true, outlineLevel: level },
   });
 
-  // Indice: voce principale Arial 12 grassetto maiuscolo, puntini fino al numero di pagina
-  const toc = (id: string, name: string, bold: boolean) => ({
+  // Indice come le ROA: ogni riga Arial 12 grassetto maiuscolo, spaziata di 18 pt, rientro 0,25 cm,
+  // numero e titolo separati da tabulazione, puntini fino al numero di pagina; sezioni in corsivo
+  const toc = (id: string, name: string, livello: number) => ({
     id,
     name,
     basedOn: 'Normal',
     next: 'Normal',
-    run: { font: FONT, size: CORPO, bold, allCaps: bold },
+    run: { font: FONT, size: CORPO, bold: true, allCaps: true, ...(livello === 4 ? { italics: true } : {}) },
     paragraph: {
-      spacing: { before: bold ? 360 : 120, after: 0, line: 240 },
+      spacing: { before: 360, after: 0, line: 240 },
       indent: { left: 142 },
       tabStops: [
-        { type: TabStopType.LEFT, position: bold ? 851 : 1200 },
+        { type: TabStopType.LEFT, position: livello <= 2 ? 851 : 1200 },
         { type: TabStopType.RIGHT, position: 9628, leader: 'dot' as const },
       ],
     },
@@ -673,10 +783,10 @@ export async function creaDocumento(
         heading('Heading2', 'Heading 2', 1, { bold: true, underline: true }),
         heading('Heading3', 'Heading 3', 2, { underline: true }),
         heading('Heading4', 'Heading 4', 3, { italics: true }),
-        toc('TOC1', 'toc 1', true),
-        toc('TOC2', 'toc 2', false),
-        toc('TOC3', 'toc 3', false),
-        toc('TOC4', 'toc 4', false),
+        toc('TOC1', 'toc 1', 1),
+        toc('TOC2', 'toc 2', 2),
+        toc('TOC3', 'toc 3', 3),
+        toc('TOC4', 'toc 4', 4),
       ],
     },
     numbering: {

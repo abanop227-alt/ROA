@@ -186,6 +186,10 @@ f77 = {
          L("Fornitura e posa di porta REI 120 di comunicazione tra filtro e [autorimessa], completa di dispositivo di auto chiusura, maniglione antipanico e chiusura di sopraluce e spallette con materiali aventi le stesse caratteristiche di resistenza al fuoco.", "cad"),
          L("Installazione di punti luce di emergenza e segnaletica di sicurezza all’interno del filtro.", "a corpo"),
          L("Fornitura e posa di sacchetti e/o schiuma termo - espandente a protezione degli eventuali cavi elettrici e tubazioni in corrispondenza degli attraversamenti delle pareti del filtro.", "a corpo")]),
+      V("77-vs-porta-filtro-vano", "Porta filtro / vano scala da sostituire con REI 120",
+        "Come da progetto, sarà necessario sostituire tale porta per la comunicazione tra il filtro e il vano scala, con una avente caratteristiche REI [120] dotata di maniglione antipanico.",
+        "Porta da sostituire.",
+        [L("Fornitura e posa di porta REI [120] di comunicazione tra filtro e vano scala, completa di dispositivo di auto chiusura, maniglione antipanico e chiusura di sopraluce e spallette con materiali aventi le stesse caratteristiche di resistenza al fuoco.", "cad")]),
       V("77-vs-porte-contrario", "Porte montate al contrario rispetto all’esodo",
         "Le porte indicate, quelle di collegamento [alle cantine e al vano scala], sono montate al contrario. Si chiede di montarle nel giusto verso, seguendo il senso dell'esodo come da progetto approvato.",
         "Porte montate al contrario.",
@@ -210,6 +214,11 @@ f77 = {
         [L("Rimozione porte locali ascensori non a norma, compreso sopraluce.", "cad"),
          L("Fornitura e posa porte REI 30, dimensioni [65 cm x 200 cm] filo muro, compresa assistenza muraria e chiusura sopraluce con materiali aventi caratteristiche almeno REI 30.", "cad"),
          L("Tinteggiature aree oggetto d’intervento.", "a corpo", False)]),
+      V("77-vs-lma-porta-80-rei", "Porta e sopraluce locale macchine da sostituire (§ 8.0, REI 30)",
+        "La comunicazione con il locale macchine ascensore, così come previsto dal punto § 8.0 della normativa vigente, dovrà avvenire tramite porte e strutture aventi caratteristiche di resistenza al fuoco non inferiori a REI 30. Al momento del sopralluogo la porta ed il sopraluce non rispettavano tali caratteristiche, pertanto, sarà necessario provvedere alla sostituzione della porta con modello avente caratteristiche di resistenza al fuoco almeno pari a REI 30 e la chiusura del sopraluce con materiali aventi caratteristiche di resistenza al fuoco almeno pari a REI 30.",
+        "Porta di accesso al locale macchine ascensore.",
+        [L("Fornitura e posa di porta REI 30 di accesso al locale macchine ascensore, in sostituzione dell’esistente, completa di dispositivo di auto chiusura.", "cad"),
+         L("Chiusura del sopraluce del locale macchine ascensore con materiali aventi caratteristiche di resistenza al fuoco REI 30.", "a corpo")]),
       V("77-vs-lma-porta-metallica", "Porta metallica locale macchine da sostituire",
         "La porta metallica di accesso al locale macchina ascensore, comunicante con il vano scala, andrà sostituita con una porta tagliafuoco avente proprietà ≥ REI30 per garantire la giusta compartimentazione del locale in caso di incendio.",
         "Porta da sostituire.",
@@ -254,7 +263,8 @@ f77 = {
     {"id": "77-cs", "titolo": "Cartelli e segnaletica di sicurezza", "voci": [
       V("77-cs-vie", "Cartellonistica vie d’esodo a ogni piano",
         "Si provveda all’installazione dell’apposita cartellonistica indicante i percorsi e le vie d’esodo ad ogni piano del vano scala [dall’ottavo al piano rialzato].",
-        "Segnaletica via di fuga da installare.", [CARTELLONISTICA]),
+        "Segnaletica via di fuga da installare.",
+        [L("Fornitura e posa nuova cartellonistica di segnalazione vie d’esodo, [dall’ottavo piano al piano terra].", "cad")]),
       V("77-cs-presidi", "Presidi da corredare di cartellonistica",
         "Si provveda a corredare i presidi con cartellonistica conforme al D.lgs. 81/08.",
         "", [CARTELLONISTICA]),
@@ -456,6 +466,7 @@ libreria = {
     "Si raccomanda di contattare la ditta manutentrice per effettuare una verifica approfondita delle condizioni attuali dei presidi antincendio.",
     "Si precisa che le lavorazioni di cui ai punti [2] e [2 bis] del computo metrico sono da considerarsi l’una alternativa dell’altra. La corretta tipologia di intervento sarà definita solo a seguito del controllo della documentazione condominiale in possesso dell’amministrazione e dal confronto con il responsabile e manutentore dell’impianto.",
     "Per la voce N. [5] si dovrà necessariamente avere accesso a tutti i box in modo tale da poter quantificare con esattezza il numero di collari necessari.",
+    "Si raccomanda di contattare la ditta manutentrice per effettuare una verifica approfondita delle condizioni attuali dei presidi antincendio, in particolare a seguito dell’esito negativo della prova idrostatica riscontrata in sede di sopralluogo.",
     "Si precisa, inoltre, che eventuali ulteriori lavorazioni dovranno essere considerate come lavorazioni aggiuntive, la cui necessità potrà emergere a seguito del sopralluogo da parte del Vigile competente, che sarà effettuato ai fini dell’approvazione della SCIA.",
     "Nel computo metrico non è stata inserita la lavorazione relativa all’eliminazione delle macchine per il condizionamento presenti nel disimpegno di accesso alla centrale termica in quanto si presume siano a carico dei singoli condomini privati.",
   ],
@@ -474,6 +485,39 @@ libreria = {
     "chiusura": "Ritenendo pertanto concluso il nostro incarico e restando comunque a Vs completa disposizione per qualsiasi chiarimento, cogliamo l’occasione per porgere Distinti Saluti.",
   },
 }
+
+
+# Voci di computo collegate alle frasi che prescrivono un intervento (proposte: descrizione, U.M.;
+# quantità e prezzi si compilano nell'app). inclusa=False = proposta ma non spuntata.
+LAVORAZIONI_AGGIUNTIVE = {
+  "74-ct-materiale": [L("Rimozione del materiale depositato nel locale disimpegno.", "a corpo")],
+  "74-ct-condizionatori": [L("Rimozione e spostamento delle macchine per il condizionamento presenti nel locale disimpegno.", "a corpo", False)],
+  "74-ds-estintore-noman": [L("Manutenzione e/o sostituzione dell’estintore a servizio della centrale termica.", "cad")],
+  "74-ds-emergenza": [L("Ripristino del dispositivo di illuminazione di emergenza.", "cad")],
+  "74-cf-altezza-nv": [L("Prolungamento della canna fumaria fino a quota superiore ad 1,00 m dal colmo del tetto (se necessario).", "a corpo", False)],
+  "75-fv-realizzare": [L("Realizzazione di n° [4] filtri di collegamento tra i vani scala e l’autorimessa con materiali REI [60].", "a corpo")],
+  "75-fv-pvc-cartongesso": [L("Compartimentazione della tubazione in PVC passante nel filtro mediante cartongesso REI [60].", "a corpo")],
+  "75-ar-corrimano": [L("Fornitura e posa di corrimano laterale lungo la scala e la rampa utilizzate come percorso d’esodo.", "ml")],
+  "75-ar-cancello": [L("Modifica del senso di apertura del cancello del passo carrabile secondo il verso dell’esodo.", "a corpo")],
+  "75-ar-portone": [L("Rimozione del portone tagliafuoco non più necessario.", "cad")],
+  "75-ar-plafoni": [L("Risanamento dei plafoni ammalorati con ripristino della resistenza al fuoco non inferiore a REI [90].", "mq")],
+  "75-ar-attacco-nuovo": [L("Fornitura e posa di attacco autopompa UNI 70, completo di cartello d’identificazione.", "cad")],
+  "75-ar-coibentazione": [L("Coibentazione delle tubazioni scoperte della rete idranti in autorimessa.", "ml")],
+  "75-ds-manichette": [L("Verifica e collaudo delle manichette da parte della ditta manutentrice.", "a corpo")],
+  "75-ds-attacco-ammalorato": [L("Manutenzione dell’attacco di mandata per motopompa e fornitura e posa del relativo cartello.", "a corpo")],
+  "77-vs-oggetti": [L("Rimozione degli oggetti presenti nel vano scala e nei pianerottoli.", "a corpo")],
+  "77-me-idranti-mancanti": [L("Fornitura e posa di idranti UNI 45 completi di cassetta, manichetta e lancia ai piani [primo e terzo].", "cad")],
+  "77-me-manichette": [L("Sostituzione ovvero collaudo delle manichette.", "cad")],
+  "77-me-prova": [L("Prova di pressione e portata dell’impianto idrico antincendio.", "a corpo")],
+  "77-me-prova-negativa": [L("Verifica dell’impianto idrico antincendio da parte di un impiantista a seguito dell’esito negativo della prova idrostatica.", "a corpo")],
+  "77-me-attacco": [L("Fornitura e posa cartello per attacco di mandata per motopompa VV.F.", "cad", False)],
+  "77-me-attacco-unico": [L("Fornitura e posa cartello per attacco di mandata per motopompa VV.F.", "cad")],
+}
+for fam in libreria["famiglie"]:
+  for sez in fam["sezioni"]:
+    for v in sez["voci"]:
+      v["lavorazioni"].extend(LAVORAZIONI_AGGIUNTIVE.pop(v["id"], []))
+assert not LAVORAZIONI_AGGIUNTIVE, f"voci inesistenti: {list(LAVORAZIONI_AGGIUNTIVE)}"
 
 out = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'roa-dati.json')
 with open(out, 'w', encoding='utf-8') as f:

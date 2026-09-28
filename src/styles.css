@@ -941,6 +941,42 @@ textarea:focus {
 .titolo-passo .muto {
   font-weight: 600;
 }
+.computo-voce {
+  border: 1px solid var(--bordo);
+  border-radius: 10px;
+  margin: 12px 0;
+  padding: 6px 12px 12px;
+}
+.computo-voce legend {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--muto);
+  padding: 0 4px;
+}
+.computo-voce p {
+  margin: 4px 0;
+}
+.lavorazione {
+  border-bottom: 1px dashed var(--bordo);
+  padding: 4px 0 8px;
+}
+.lavorazione.esclusa .riga-check span {
+  color: var(--muto);
+  text-decoration: line-through;
+}
+.lavorazione-numeri {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.2fr;
+  gap: 8px;
+  padding-left: 36px;
+}
+.lavorazione-numeri .campo {
+  margin: 0;
+  min-width: 0;
+}
+.origine {
+  margin: 2px 0 4px 28px;
+}
 .carta-intestata {
   margin-top: 16px;
   display: flex;

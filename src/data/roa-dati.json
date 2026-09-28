@@ -150,14 +150,25 @@
               "titolo": "Materiale depositato nel disimpegno",
               "testo": "Si ricorda inoltre che, all’interno del locale disimpegno è assolutamente vietato depositare qualsiasi tipo di materiale e/o sostanza. Si provveda pertanto alla rimozione di tutto il materiale rilevato in fase di sopralluogo.",
               "didascalia": "Materiale presente nel disimpegno da rimuovere.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Rimozione del materiale depositato nel locale disimpegno.",
+                  "um": "a corpo"
+                }
+              ]
             },
             {
               "id": "74-ct-condizionatori",
               "titolo": "Macchine per il condizionamento nel disimpegno",
               "testo": "Analogamente a quanto descritto al punto precedente si prescrive la rimozione e lo spostamento delle macchine per il condizionamento ad oggi presenti nel locale disimpegno.",
               "didascalia": "Macchine per il condizionamento da rimuovere.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Rimozione e spostamento delle macchine per il condizionamento presenti nel locale disimpegno.",
+                  "um": "a corpo",
+                  "inclusa": false
+                }
+              ]
             },
             {
               "id": "74-ct-sgancio-doppione",
@@ -189,7 +200,12 @@
               "titolo": "Estintore privo di manutenzione",
               "testo": "Durante il sopralluogo è stata riscontrata l’assenza di manutenzione sull’estintore posizionato all’interno della centrale termica. Pertanto, si dovrà provvedere alla sua manutenzione e/o sostituzione, se necessario, da parte della ditta manutentrice dei presidi antincendio.\nInoltre, si ricorda che il numero degli estintori non dovrà mai essere inferiore a n°1, posizionato in prossimità del locale centrale termica. Inoltre, l’estintore dovrà possedere capacità estinguente non inferiore a [34 A – 144 B] corredato da apposita cartellonistica di ampiezza sufficiente per consentirne un’immediata individuazione.",
               "didascalia": "Estintore presente privo di manutenzione.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Manutenzione e/o sostituzione dell’estintore a servizio della centrale termica.",
+                  "um": "cad"
+                }
+              ]
             },
             {
               "id": "74-ds-cartellino",
@@ -210,7 +226,12 @@
               "titolo": "Illuminazione di emergenza non funzionante",
               "testo": "All’interno del disimpegno è stata rilevata la presenza dell’illuminazione di emergenza. Al momento del sopralluogo, però, tale dispositivo non appariva correttamente funzionante (led segnalatore rosso). Si provveda a contattare apposita ditta per la manutenzione ed il ripristino del dispositivo.",
               "didascalia": "Luce d’emergenza da ripristinare.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Ripristino del dispositivo di illuminazione di emergenza.",
+                  "um": "cad"
+                }
+              ]
             },
             {
               "id": "74-ds-gas-giallo",
@@ -294,7 +315,13 @@
               "titolo": "Terminale non verificabile",
               "testo": "Non è stato possibile verificare se la parte terminale della canna fumaria posta in copertura risulta di altezza superiore ad 1,00 m dal colmo del tetto, se così non sarà si dovrà provvedere a portare la stessa all’altezza indicata.",
               "didascalia": "Canna fumaria.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Prolungamento della canna fumaria fino a quota superiore ad 1,00 m dal colmo del tetto (se necessario).",
+                  "um": "a corpo",
+                  "inclusa": false
+                }
+              ]
             }
           ]
         },
@@ -446,7 +473,12 @@
               "titolo": "Filtri da realizzare",
               "testo": "Al fine di garantire la corrispondenza dello stato dei luoghi al progetto approvato sarà necessario realizzare n°[4] filtri di collegamento tra i vani scala e l’autorimessa.\nI suddetti filtri dovranno essere realizzati con materiali in grado di garantire caratteristiche di resistenza al fuoco almeno pari a REI [60].",
               "didascalia": "Filtro vano scala [A].",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Realizzazione di n° [4] filtri di collegamento tra i vani scala e l’autorimessa con materiali REI [60].",
+                  "um": "a corpo"
+                }
+              ]
             },
             {
               "id": "75-fv-esistenti",
@@ -560,7 +592,12 @@
               "titolo": "Tubazione in PVC nel filtro: cartongesso REI",
               "testo": "Al momento del sopralluogo è stata riscontrata la presenza di un tratto di tubazione in PVC passante all’interno del filtro del vano scala [C]. Sarà necessario provvedere alla compartimentazione dello stesso mediante cartongesso avente caratteristiche di resistenza al fuoco non inferiori a REI [60].",
               "didascalia": "Tubazione in PVC passante nel filtro scala [C].",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Compartimentazione della tubazione in PVC passante nel filtro mediante cartongesso REI [60].",
+                  "um": "a corpo"
+                }
+              ]
             },
             {
               "id": "75-fv-griglia-lma",
@@ -596,28 +633,48 @@
               "titolo": "Scala e rampa d’esodo: corrimano",
               "testo": "La scala e la rampa utilizzate come percorso d’esodo fino a luogo sicuro definitivo, dovranno essere dotate di corrimano laterale, come prescritto al punto S.4.5.4 del D.M. 03/08/2015.",
               "didascalia": "Vie d’esodo.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Fornitura e posa di corrimano laterale lungo la scala e la rampa utilizzate come percorso d’esodo.",
+                  "um": "ml"
+                }
+              ]
             },
             {
               "id": "75-ar-cancello",
               "titolo": "Cancello del passo carrabile apribile nel senso di fuga",
               "testo": "Il cancello situato all'inizio del passo carrabile e destinato anche all'esodo di emergenza dovrà aprirsi nel senso di fuga, in conformità ai requisiti previsti per le vie di esodo.",
               "didascalia": "Porta d’esodo rampa carrabile.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Modifica del senso di apertura del cancello del passo carrabile secondo il verso dell’esodo.",
+                  "um": "a corpo"
+                }
+              ]
             },
             {
               "id": "75-ar-portone",
               "titolo": "Portone tagliafuoco non più necessario",
               "testo": "A seguito del progetto, presentato al Comando Provinciale dei VV.F. di [Milano], la presenza del portone tagliafuoco avente classe di resistenza al fuoco pari a REI [120] non risulta più necessaria. Si provveda pertanto alla rimozione del dispositivo.",
               "didascalia": "Portone tagliafuoco.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Rimozione del portone tagliafuoco non più necessario.",
+                  "um": "cad"
+                }
+              ]
             },
             {
               "id": "75-ar-plafoni",
               "titolo": "Plafoni ammalorati con ferri scoperti",
               "testo": "I plafoni dell’autorimessa, in alcune zone localizzate, si presentavano deteriorati, lasciando scoperti i ferri dell’armatura. Si provveda pertanto a risanare le strutture in modo da garantire la resistenza al fuoco non inferiore a REI [90], oltre che la loro stabilità.",
               "didascalia": "Plafone ammalorato.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Risanamento dei plafoni ammalorati con ripristino della resistenza al fuoco non inferiore a REI [90].",
+                  "um": "mq"
+                }
+              ]
             },
             {
               "id": "75-ar-pvc-collari",
@@ -665,7 +722,12 @@
               "titolo": "Attacco autopompa UNI 70 da installare",
               "testo": "Dovrà essere installato un attacco autopompa UNI 70, internamente in prossimità dell’entrata del passo carrabile, correlato da apposito cartello d’identificazione, a servizio esclusivo dell’autorimessa, ben visibile e facilmente raggiungibile. Sarà cura del manutentore dell’impianto, accertarsi della presenza del disconnettore e filtro idraulico come da normativa vigente.",
               "didascalia": "Entrata passo carrabile.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Fornitura e posa di attacco autopompa UNI 70, completo di cartello d’identificazione.",
+                  "um": "cad"
+                }
+              ]
             },
             {
               "id": "75-ar-rete-requisiti",
@@ -679,7 +741,12 @@
               "titolo": "Tubazioni della rete idranti da coibentare",
               "testo": "Sarà necessaria la coibentazione delle tubazioni scoperte presenti in autorimessa, per evitare che, in basse temperature, l’acqua al suo interno congeli, impossibilitando in caso di incendio il corretto funzionamento degli idranti.",
               "didascalia": "Tubazioni da coibentare.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Coibentazione delle tubazioni scoperte della rete idranti in autorimessa.",
+                  "um": "ml"
+                }
+              ]
             }
           ]
         },
@@ -747,7 +814,12 @@
               "titolo": "Manichette prive di manutenzione",
               "testo": "Al momento del sopralluogo le manichette risultavano tuttavia prive di manutenzione e/o collaudo.\nSi provveda a contattare la ditta manutentrice dei presidi per effettuare le verifiche necessarie.",
               "didascalia": "Manichette scadute.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Verifica e collaudo delle manichette da parte della ditta manutentrice.",
+                  "um": "a corpo"
+                }
+              ]
             },
             {
               "id": "75-ds-attacchi",
@@ -761,7 +833,12 @@
               "titolo": "Attacco motopompa ammalorato / senza cartellino",
               "testo": "Al momento del sopralluogo il presidio si presentava sprovvisto di cartellino di manutenzione semestrale ed ammalorato. Contattare la ditta manutentrice per provvedere al suo corretto mantenimento. Corredarlo di idonea cartellonistica conforme al D.lgs. 81/08 per una più rapida individuazione.",
               "didascalia": "Attacco di mandata per motopompa.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Manutenzione dell’attacco di mandata per motopompa e fornitura e posa del relativo cartello.",
+                  "um": "a corpo"
+                }
+              ]
             }
           ]
         },
@@ -964,6 +1041,18 @@
               ]
             },
             {
+              "id": "77-vs-porta-filtro-vano",
+              "titolo": "Porta filtro / vano scala da sostituire con REI 120",
+              "testo": "Come da progetto, sarà necessario sostituire tale porta per la comunicazione tra il filtro e il vano scala, con una avente caratteristiche REI [120] dotata di maniglione antipanico.",
+              "didascalia": "Porta da sostituire.",
+              "lavorazioni": [
+                {
+                  "descrizione": "Fornitura e posa di porta REI [120] di comunicazione tra filtro e vano scala, completa di dispositivo di auto chiusura, maniglione antipanico e chiusura di sopraluce e spallette con materiali aventi le stesse caratteristiche di resistenza al fuoco.",
+                  "um": "cad"
+                }
+              ]
+            },
+            {
               "id": "77-vs-porte-contrario",
               "titolo": "Porte montate al contrario rispetto all’esodo",
               "testo": "Le porte indicate, quelle di collegamento [alle cantine e al vano scala], sono montate al contrario. Si chiede di montarle nel giusto verso, seguendo il senso dell'esodo come da progetto approvato.",
@@ -980,7 +1069,12 @@
               "titolo": "Oggetti lungo le vie d’esodo",
               "testo": "È vietato porre qualsiasi genere di materiale lungo le vie d’esodo in modo da non creare intralcio in caso di necessità; pertanto, sarà necessario rimuovere gli oggetti nel vano scala e nei pianerottoli dal piano [copertura] al piano [terra].",
               "didascalia": "Oggetti da rimuovere.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Rimozione degli oggetti presenti nel vano scala e nei pianerottoli.",
+                  "um": "a corpo"
+                }
+              ]
             }
           ]
         },
@@ -1036,6 +1130,22 @@
                   "descrizione": "Tinteggiature aree oggetto d’intervento.",
                   "um": "a corpo",
                   "inclusa": false
+                }
+              ]
+            },
+            {
+              "id": "77-vs-lma-porta-80-rei",
+              "titolo": "Porta e sopraluce locale macchine da sostituire (§ 8.0, REI 30)",
+              "testo": "La comunicazione con il locale macchine ascensore, così come previsto dal punto § 8.0 della normativa vigente, dovrà avvenire tramite porte e strutture aventi caratteristiche di resistenza al fuoco non inferiori a REI 30. Al momento del sopralluogo la porta ed il sopraluce non rispettavano tali caratteristiche, pertanto, sarà necessario provvedere alla sostituzione della porta con modello avente caratteristiche di resistenza al fuoco almeno pari a REI 30 e la chiusura del sopraluce con materiali aventi caratteristiche di resistenza al fuoco almeno pari a REI 30.",
+              "didascalia": "Porta di accesso al locale macchine ascensore.",
+              "lavorazioni": [
+                {
+                  "descrizione": "Fornitura e posa di porta REI 30 di accesso al locale macchine ascensore, in sostituzione dell’esistente, completa di dispositivo di auto chiusura.",
+                  "um": "cad"
+                },
+                {
+                  "descrizione": "Chiusura del sopraluce del locale macchine ascensore con materiali aventi caratteristiche di resistenza al fuoco REI 30.",
+                  "um": "a corpo"
                 }
               ]
             },
@@ -1099,42 +1209,73 @@
               "titolo": "Idranti mancanti da installare",
               "testo": "È altresì necessario procedere, in conformità con il progetto, all’installazione degli idranti mancanti ai piani [primo e terzo], al fine di garantire la sicurezza e il rispetto delle normative vigenti.",
               "didascalia": "",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Fornitura e posa di idranti UNI 45 completi di cassetta, manichetta e lancia ai piani [primo e terzo].",
+                  "um": "cad"
+                }
+              ]
             },
             {
               "id": "77-me-prova",
               "titolo": "Prova di pressione non eseguita",
               "testo": "Durante il sopralluogo non è stato possibile eseguire la prova di pressione dell’impianto idrico antincendio.\nSarà necessario effettuare la verifica di efficienza dell’impianto, rilevando la pressione residua al bocchello della lancia in condizioni più sfavorevoli per altimetria e distanza.\nL’esito della prova dovrà garantire una portata di 120 l/m necessari, ovvero una pressione pari almeno a 2 bar, con la contemporanea apertura dei due presidi idraulicamente più sfavoriti.\nQualora la prova darà esito negativo sarà necessario effettuare ulteriori verifiche da parte di un impiantista al fine di definire le eventuali lavorazioni da eseguire, ad oggi impossibili da prevedere e computare.",
               "didascalia": "",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Prova di pressione e portata dell’impianto idrico antincendio.",
+                  "um": "a corpo"
+                }
+              ]
             },
             {
               "id": "77-me-prova-negativa",
               "titolo": "Prova idrostatica con esito negativo",
               "testo": "Durante il sopralluogo è stata eseguita la prova idrostatica, la quale ha avuto esito negativo.",
               "didascalia": "Pressione minore di 2 BAR.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Verifica dell’impianto idrico antincendio da parte di un impiantista a seguito dell’esito negativo della prova idrostatica.",
+                  "um": "a corpo"
+                }
+              ]
             },
             {
               "id": "77-me-manichette",
               "titolo": "Manichette obsolete, senza manutenzione",
               "testo": "Al momento del sopralluogo le manichette si presentavano obsolete, prive del collaudo e della manutenzione semestrale da parte dell’impresa manutentrice.\nSi provveda pertanto alla loro sostituzione, ovvero al collaudo delle stesse.",
               "didascalia": "Manichette scadute e manutenzione semestrale assente.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Sostituzione ovvero collaudo delle manichette.",
+                  "um": "cad"
+                }
+              ]
             },
             {
               "id": "77-me-attacco",
               "titolo": "Attacco di mandata per motopompa VV.F.",
               "testo": "Completa l’impianto antincendio n. 1 attacco di mandata per motopompa dei VV.F., posto [nei pressi dell’entrata del passo carrabile], corredato da idonea cartellonistica conforme D.lgs. 81/08[, da porre fuori dalla cassetta per una più rapida individuazione, e da cartellino di manutenzione semestrale].",
               "didascalia": "Attacco di mandata per motopompa VV.F.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Fornitura e posa cartello per attacco di mandata per motopompa VV.F.",
+                  "um": "cad",
+                  "inclusa": false
+                }
+              ]
             },
             {
               "id": "77-me-attacco-unico",
               "titolo": "Attacco UNI 70 a servizio di più colonne",
               "testo": "A completare l’impianto idrico antincendio è presente n°1 attacco di mandata per autopompa dei VV.F. di tipo UNI 70, posto a servizio di entrambe le colonne montanti. Corredarlo di cartellonistica conforme al D.lgs. 81/08.",
               "didascalia": "Attacco di mandata per motopompa.",
-              "lavorazioni": []
+              "lavorazioni": [
+                {
+                  "descrizione": "Fornitura e posa cartello per attacco di mandata per motopompa VV.F.",
+                  "um": "cad"
+                }
+              ]
             },
             {
               "id": "77-me-attacco-safecrash",
@@ -1163,7 +1304,7 @@
               "didascalia": "Segnaletica via di fuga da installare.",
               "lavorazioni": [
                 {
-                  "descrizione": "Fornitura e posa nuova cartellonistica.",
+                  "descrizione": "Fornitura e posa nuova cartellonistica di segnalazione vie d’esodo, [dall’ottavo piano al piano terra].",
                   "um": "cad"
                 }
               ]
@@ -1269,6 +1410,7 @@
     "Si raccomanda di contattare la ditta manutentrice per effettuare una verifica approfondita delle condizioni attuali dei presidi antincendio.",
     "Si precisa che le lavorazioni di cui ai punti [2] e [2 bis] del computo metrico sono da considerarsi l’una alternativa dell’altra. La corretta tipologia di intervento sarà definita solo a seguito del controllo della documentazione condominiale in possesso dell’amministrazione e dal confronto con il responsabile e manutentore dell’impianto.",
     "Per la voce N. [5] si dovrà necessariamente avere accesso a tutti i box in modo tale da poter quantificare con esattezza il numero di collari necessari.",
+    "Si raccomanda di contattare la ditta manutentrice per effettuare una verifica approfondita delle condizioni attuali dei presidi antincendio, in particolare a seguito dell’esito negativo della prova idrostatica riscontrata in sede di sopralluogo.",
     "Si precisa, inoltre, che eventuali ulteriori lavorazioni dovranno essere considerate come lavorazioni aggiuntive, la cui necessità potrà emergere a seguito del sopralluogo da parte del Vigile competente, che sarà effettuato ai fini dell’approvazione della SCIA.",
     "Nel computo metrico non è stata inserita la lavorazione relativa all’eliminazione delle macchine per il condizionamento presenti nel disimpegno di accesso alla centrale termica in quanto si presume siano a carico dei singoli condomini privati."
   ],

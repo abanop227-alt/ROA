@@ -65,6 +65,6 @@ describe('computo metrico', () => {
     voce(s, '77-cs-vie').selezionata = true;
     s.righeExtra[0].inclusa = false;
     const [z] = zoneComputo(s, cat);
-    expect(z.righe.map((r) => r.descrizione)).toEqual(['Fornitura e posa nuova cartellonistica.']);
+    expect(z.righe.map((r) => r.descrizione)).toEqual(['Fornitura e posa nuova cartellonistica di segnalazione vie d’esodo, [dall’ottavo piano al piano terra].']);
   });
 });
