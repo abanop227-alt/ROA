@@ -26,6 +26,7 @@ describe('libreria', () => {
     }
     expect(cat.famiglie.find((f) => f.id === '77')!.sezioni.map((s) => s.titolo)).toEqual([
       'Vano scala',
+      'Locale macchine ascensore',
       'Mezzi di estinzione',
       'Cartelli e segnaletica di sicurezza',
     ]);
@@ -113,7 +114,13 @@ describe('istanziazione per attività', () => {
     voce(s, '77-vs-aer-ok').selezionata = true;
     s = duplicaSezione(s, cat, vs.key, 'Vano scala B');
     const sez = sezioniDiAttivita(s, '77.1.A');
-    expect(sez.map((x) => x.titolo)).toEqual(['Vano scala', 'Vano scala B', 'Mezzi di estinzione', 'Cartelli e segnaletica di sicurezza']);
+    expect(sez.map((x) => x.titolo)).toEqual([
+      'Vano scala',
+      'Vano scala B',
+      'Locale macchine ascensore',
+      'Mezzi di estinzione',
+      'Cartelli e segnaletica di sicurezza',
+    ]);
     const nuove = vociDiSezione(s, sez[1].key);
     expect(nuove.length).toBe(vociDiSezione(s, vs.key).length);
     expect(nuove.every((v) => !v.selezionata)).toBe(true);
@@ -130,7 +137,7 @@ describe('istanziazione per attività', () => {
     [a, b, c].forEach((v) => (v.selezionata = true));
     a.fotoIds = ['f1'];
     b.fotoIds = ['f2', 'f3'];
-    const pers = nuovaVocePersonalizzata(sezioniDiAttivita(s, '77.1.A')[2]);
+    const pers = nuovaVocePersonalizzata(sezioniDiAttivita(s, '77.1.A')[3]);
     s.voci.push(pers);
     const g = gruppiDocumento(s);
     expect(g.map((x) => x.sezioni.map((y) => y.sezione.titolo))).toEqual([

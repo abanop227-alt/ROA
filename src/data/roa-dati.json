@@ -933,6 +933,62 @@
               ]
             },
             {
+              "id": "77-vs-porta-copertura",
+              "titolo": "Porta REI al piano copertura non in progetto",
+              "testo": "Si segnala la presenza, al piano [copertura], di una porta REI non riportata nel progetto approvato, la cui presenza potrebbe ostacolare il passaggio dei fumi, in caso di incendio, verso le aperture di aerazione permanente indicate dal progetto approvato stesso. Si ritiene opportuno, prima di fornire indicazioni operative in merito a tale porta, attendere l'esito del sopralluogo e il relativo verdetto del Comando dei Vigili del Fuoco.",
+              "didascalia": "Porta non riportata nel progetto.",
+              "lavorazioni": []
+            },
+            {
+              "id": "77-vs-filtro-autorimessa",
+              "titolo": "Filtro a prova di fumo edificio / autorimessa da realizzare",
+              "testo": "Come da progetto, sarà necessario realizzare il filtro a prova di fumo per la comunicazione tra edificio e autorimessa.",
+              "didascalia": "Filtro a prova di fumo da realizzare.",
+              "lavorazioni": [
+                {
+                  "descrizione": "Realizzazione di pareti in muratura con resistenza al fuoco REI 120 per separare il filtro a prova di fumo dal resto del comparto, come da progetto approvato.",
+                  "um": "mq"
+                },
+                {
+                  "descrizione": "Fornitura e posa di porta REI 120 di comunicazione tra filtro e [autorimessa], completa di dispositivo di auto chiusura, maniglione antipanico e chiusura di sopraluce e spallette con materiali aventi le stesse caratteristiche di resistenza al fuoco.",
+                  "um": "cad"
+                },
+                {
+                  "descrizione": "Installazione di punti luce di emergenza e segnaletica di sicurezza all’interno del filtro.",
+                  "um": "a corpo"
+                },
+                {
+                  "descrizione": "Fornitura e posa di sacchetti e/o schiuma termo - espandente a protezione degli eventuali cavi elettrici e tubazioni in corrispondenza degli attraversamenti delle pareti del filtro.",
+                  "um": "a corpo"
+                }
+              ]
+            },
+            {
+              "id": "77-vs-porte-contrario",
+              "titolo": "Porte montate al contrario rispetto all’esodo",
+              "testo": "Le porte indicate, quelle di collegamento [alle cantine e al vano scala], sono montate al contrario. Si chiede di montarle nel giusto verso, seguendo il senso dell'esodo come da progetto approvato.",
+              "didascalia": "Porte montate al contrario.",
+              "lavorazioni": [
+                {
+                  "descrizione": "Smontaggio e rimontaggio delle porte di collegamento [alle cantine e al vano scala] con inversione del senso di apertura secondo il verso dell’esodo, compresa regolazione del dispositivo di auto chiusura e riposizionamento del maniglione antipanico.",
+                  "um": "cad"
+                }
+              ]
+            },
+            {
+              "id": "77-vs-oggetti",
+              "titolo": "Oggetti lungo le vie d’esodo",
+              "testo": "È vietato porre qualsiasi genere di materiale lungo le vie d’esodo in modo da non creare intralcio in caso di necessità; pertanto, sarà necessario rimuovere gli oggetti nel vano scala e nei pianerottoli dal piano [copertura] al piano [terra].",
+              "didascalia": "Oggetti da rimuovere.",
+              "lavorazioni": []
+            }
+          ]
+        },
+        {
+          "id": "77-lm",
+          "titolo": "Locale macchine ascensore",
+          "voci": [
+            {
               "id": "77-vs-lma-aer-ok",
               "titolo": "Locale macchine ascensore: aerazione presente",
               "testo": "È stata riscontrata un’apertura d’areazione, all’interno del locale tecnico ascensore, che soddisfa i requisiti necessari (> 1 mq.) per un corretto smaltimento dei fumi in caso di incendio.",
@@ -1005,10 +1061,17 @@
               ]
             },
             {
-              "id": "77-vs-oggetti",
-              "titolo": "Oggetti lungo le vie d’esodo",
-              "testo": "È vietato porre qualsiasi genere di materiale lungo le vie d’esodo in modo da non creare intralcio in caso di necessità; pertanto, sarà necessario rimuovere gli oggetti nel vano scala e nei pianerottoli dal piano [copertura] al piano [terra].",
-              "didascalia": "Oggetti da rimuovere.",
+              "id": "77-lm-porta-terrazza",
+              "titolo": "Porta non conforme ma accesso da terrazza (nessuna sostituzione)",
+              "testo": "Il locale macchine [dei due ascensori], ubicato al piano [sottotetto], presenta una porta di accesso non conforme al progetto approvato. Poiché l'accesso avviene da terrazza a cielo aperto, si ritiene non necessaria la sostituzione dell'infisso ai fini dell'adeguamento.",
+              "didascalia": "Porta accesso locale ascensore.",
+              "lavorazioni": []
+            },
+            {
+              "id": "77-lm-aer-naturale",
+              "titolo": "Aerazione naturale permanentemente aperta",
+              "testo": "Al momento del sopralluogo, il locale macchine ascensore risultava dotato di apertura per l’aerazione naturale permanentemente aperta.",
+              "didascalia": "Aereazione permanente, locale ascensore.",
               "lavorazioni": []
             }
           ]
@@ -1043,6 +1106,13 @@
               "titolo": "Prova di pressione non eseguita",
               "testo": "Durante il sopralluogo non è stato possibile eseguire la prova di pressione dell’impianto idrico antincendio.\nSarà necessario effettuare la verifica di efficienza dell’impianto, rilevando la pressione residua al bocchello della lancia in condizioni più sfavorevoli per altimetria e distanza.\nL’esito della prova dovrà garantire una portata di 120 l/m necessari, ovvero una pressione pari almeno a 2 bar, con la contemporanea apertura dei due presidi idraulicamente più sfavoriti.\nQualora la prova darà esito negativo sarà necessario effettuare ulteriori verifiche da parte di un impiantista al fine di definire le eventuali lavorazioni da eseguire, ad oggi impossibili da prevedere e computare.",
               "didascalia": "",
+              "lavorazioni": []
+            },
+            {
+              "id": "77-me-prova-negativa",
+              "titolo": "Prova idrostatica con esito negativo",
+              "testo": "Durante il sopralluogo è stata eseguita la prova idrostatica, la quale ha avuto esito negativo.",
+              "didascalia": "Pressione minore di 2 BAR.",
               "lavorazioni": []
             },
             {
@@ -1189,13 +1259,17 @@
     "cartelli da apporre sopra le uscite d’emergenza",
     "cartelli da applicare in direzione delle uscite di emergenza",
     "cartelli da applicare in prossimità delle uscite di emergenza",
-    "cartelli da applicare verso i vani scala"
+    "cartelli da applicare verso i vani scala",
+    "cartelli da applicare a tutti i piani del vano scala",
+    "cartelli da applicare verso l’uscita di emergenza",
+    "cartelli da applicare nei pressi delle uscite di sicurezza"
   ],
   "notaBeneSuggerimenti": [
     "Si ricorda che, sarà necessario effettuare le prove di pressione e portata dell’impianto idrico antincendio per verificarne le attuali prestazioni in conformità alle vigenti normative ed eventualmente, dopo le verifiche di un impiantista, definire le lavorazioni da eseguire, ad oggi impossibili da computare.",
     "Si raccomanda di contattare la ditta manutentrice per effettuare una verifica approfondita delle condizioni attuali dei presidi antincendio.",
     "Si precisa che le lavorazioni di cui ai punti [2] e [2 bis] del computo metrico sono da considerarsi l’una alternativa dell’altra. La corretta tipologia di intervento sarà definita solo a seguito del controllo della documentazione condominiale in possesso dell’amministrazione e dal confronto con il responsabile e manutentore dell’impianto.",
     "Per la voce N. [5] si dovrà necessariamente avere accesso a tutti i box in modo tale da poter quantificare con esattezza il numero di collari necessari.",
+    "Si precisa, inoltre, che eventuali ulteriori lavorazioni dovranno essere considerate come lavorazioni aggiuntive, la cui necessità potrà emergere a seguito del sopralluogo da parte del Vigile competente, che sarà effettuato ai fini dell’approvazione della SCIA.",
     "Nel computo metrico non è stata inserita la lavorazione relativa all’eliminazione delle macchine per il condizionamento presenti nel disimpegno di accesso alla centrale termica in quanto si presume siano a carico dei singoli condomini privati."
   ],
   "testi": {
