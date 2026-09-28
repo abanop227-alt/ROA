@@ -1,0 +1,252 @@
+{
+  "attivita": [
+    {
+      "codice": "74.1.A",
+      "descrizione": "Impianti per la produzione di calore alimentati a combustibile solido, liquido o gassoso, potenzialità superiore a 116 kW e fino a 350 kW (Allegato I, D.P.R. 151/2011)"
+    },
+    {
+      "codice": "74.2.B",
+      "descrizione": "Impianti per la produzione di calore alimentati a combustibile solido, liquido o gassoso, potenzialità superiore a 350 kW e fino a 700 kW (Allegato I, D.P.R. 151/2011)"
+    },
+    {
+      "codice": "75.1.A",
+      "descrizione": "Autorimesse pubbliche e private, superficie coperta superiore a 300 mq e fino a 1.000 mq (Allegato I, D.P.R. 151/2011)"
+    },
+    {
+      "codice": "75.2.B",
+      "descrizione": "Autorimesse pubbliche e private, superficie coperta superiore a 1.000 mq e fino a 3.000 mq (Allegato I, D.P.R. 151/2011)"
+    },
+    {
+      "codice": "75.4.C",
+      "descrizione": "Autorimesse pubbliche e private, superficie coperta superiore a 3.000 mq (Allegato I, D.P.R. 151/2011)"
+    },
+    {
+      "codice": "77.1.A",
+      "descrizione": "Edifici destinati ad uso civile, altezza antincendio superiore a 24 m e fino a 32 m (Allegato I, D.P.R. 151/2011)"
+    }
+  ],
+  "voci": [
+    {
+      "id": "g0",
+      "titolo": "Filtri a prova di fumo vani scala / autorimessa",
+      "attivita": [
+        "75.1.A",
+        "75.2.B",
+        "75.4.C"
+      ],
+      "rifNormativo": "Codice di prevenzione incendi, Cap. V.6 \"Autorimesse\"",
+      "testo": "Al fine di garantire la corrispondenza dello stato dei luoghi al progetto approvato sarà necessario realizzare n° [quantità] filtri di collegamento tra i vani scala e l'autorimessa. I suddetti filtri dovranno essere realizzati con materiali in grado di garantire caratteristiche di resistenza al fuoco almeno pari a REI [classe, es. 60]. Al momento del sopralluogo la porta di collegamento tra il corsello ed il vano scala [identificativo], sebbene fosse REI e costantemente revisionata dalla ditta manutentrice, non sembrava in ottimo stato in quanto [priva della guaina termo-espandente / verniciata, con conseguente perdita delle informazioni del produttore]. Si provveda alla sostituzione della stessa con un modello avente caratteristiche di resistenza al fuoco non inferiori a REI [classe]. La porzione del vano scala interessata dal filtro è attraversata da [tubazioni in PVC / tubazioni fognarie]: sarà necessario proteggere le stesse con [collari termo-espandenti / compartimentazione REI [classe]] nel punto di attraversamento.",
+      "certificazioni": [
+        "Certificazione porte REI",
+        "Dichiarazione di conformità dei maniglioni antipanico",
+        "Dichiarazione di conformità dei collari termo-espandenti",
+        "Dichiarazione di corretta posa dei collari termo-espandenti"
+      ],
+      "umDefault": "cad"
+    },
+    {
+      "id": "g1",
+      "titolo": "Vano/i scala — aerazione in sommità e comunicazioni ai piani",
+      "attivita": [
+        "77.1.A"
+      ],
+      "rifNormativo": "D.M. 16/05/1987 n. 246 (punti 2.4 e 2.6, Tabella B; punto 8.0 per edifici esistenti)",
+      "testo": "Il punto 2.4 del D.M. 16/05/1987 n. 246 prescrive che il vano scala abbia superficie netta di aerazione permanente in sommità non inferiore a 1 mq. Al momento del sopralluogo [non è stata rilevata / è stata rilevata] la presenza di tale aerazione [del vano scala / dei vani scala [identificativi]]. [Se assente: si provveda alla rimozione degli infissi vetrati presenti fino al raggiungimento di una superficie almeno pari a 1,00 mq, sostituendoli con griglie alettate]. Le comunicazioni tra i vani scala condominiali ed i locali cantinati/sottotetto al piano [numero] sono ammesse, secondo la Tabella B del punto 2.6, tramite disimpegno con porte REI 60 oppure filtro a prova di fumo con porte REI 60; per gli edifici esistenti il punto 8.0 consente in alternativa porte RE 30 anche senza disimpegno o filtro. Al momento del sopralluogo le porte non rispettavano tali caratteristiche: sarà necessario sostituirle con modelli aventi resistenza al fuoco almeno pari a [RE/REI] [classe, 30 o 60 a seconda della soluzione adottata] e provvisti del dispositivo di autochiusura.",
+      "certificazioni": [
+        "Certificazione porte REI",
+        "Dichiarazione di corretta posa delle porte REI"
+      ],
+      "umDefault": "cad"
+    },
+    {
+      "id": "g2",
+      "titolo": "Locale centrale termica — aperture di aerazione e disimpegno",
+      "attivita": [
+        "74.1.A",
+        "74.2.B"
+      ],
+      "rifNormativo": "D.M. 08/11/2019 (§ 3.3.4, § 3.3.5, § 3.3.5.1)",
+      "testo": "Il § 3.3.4 del D.M. 08/11/2019 stabilisce che le aperture di aerazione del locale centrale termica debbano avere dimensione minima pari a [0,3] mq. Al momento del sopralluogo è stata riscontrata la presenza di aperture permanenti aventi dimensioni pari a [misura] mq. L'accesso al locale avviene tramite disimpegno, [correttamente realizzato / non correttamente realizzato] come previsto dal § 3.3.5 (superficie minima 2,00 mq, aperture di aerazione minime 0,5 mq). Le porte di accesso ai locali disimpegno e centrale termica devono essere provviste del congegno di autochiusura, come prescritto dal § 3.3.5.1: [si provveda al ripristino dei congegni non funzionanti / risultava assente il dispositivo di autochiusura, sarà necessario installarlo]. È stata riscontrata la potenzialità dell'impianto pari a [valore] kW, [conforme / non conforme] al progetto approvato del [anno].",
+      "certificazioni": [
+        "Dichiarazione di conformità dell'impianto termico",
+        "Certificato di costruzione generatore termico",
+        "Certificato sostitutivo rispondenza strutture alla classe REI",
+        "Dichiarazione di conformità opere edili per compartimentazione REI 120",
+        "Dichiarazione di corretta posa delle opere edili"
+      ],
+      "umDefault": "a corpo"
+    },
+    {
+      "id": "g3",
+      "titolo": "Canna fumaria / canale fumi",
+      "attivita": [
+        "74.1.A",
+        "74.2.B"
+      ],
+      "rifNormativo": "D.P.R. 1391/70 · UNI 9615",
+      "testo": "Al momento del sopralluogo è stata accertata la presenza del termometro per il rilevamento della temperatura dei fumi sul canale, come prescritto dal D.P.R. 1391/70, ed è stata verificata la presenza della camera di raccolta alla base del tratto verticale. Non è stato possibile osservare se la parte terminale della canna fumaria fosse ad altezza superiore ad 1,00 m dal colmo del tetto: qualora fosse inferiore, si dovrà provvedere al suo adeguamento. [Eventuale: il canale attraversa il corridoio delle cantine e deve essere compartimentato; se non costituito con materiali REI certificati, sarà necessario installare collari tagliafuoco in corrispondenza degli attraversamenti].",
+      "certificazioni": [
+        "Dichiarazione di conformità UNI 9615 per camini intubati"
+      ],
+      "umDefault": "a corpo"
+    },
+    {
+      "id": "g4",
+      "titolo": "Dispositivi di sicurezza centrale termica",
+      "attivita": [
+        "74.1.A",
+        "74.2.B"
+      ],
+      "rifNormativo": "D.M. 12/04/1996 · D.Lgs. 81/08",
+      "testo": "Il numero degli estintori a servizio della centrale termica non dovrà mai essere inferiore a n° 1, posizionato in prossimità della stessa, con capacità estinguente non inferiore a [valore, es. 21A-89BC / 34A-144B] e corredato da apposita cartellonistica. Al momento del sopralluogo [risultava assente il presidio, sarà necessario provvedere alla fornitura e posa / è stata riscontrata la presenza del presidio, correttamente manutenuto]. Si ricorda che gli estintori devono essere soggetti a manutenzione semestrale (D.Lgs. 81/08). Al momento del sopralluogo [è stata / non è stata] riscontrata la presenza del rilevatore di fughe gas collegato all'elettrovalvola. Si provveda all'installazione di un pulsante di sgancio all'esterno della centrale termica, corredato di idonea cartellonistica. La cassetta del contatore gas deve essere areata: si provveda [alla foratura / a corredarla di cartellonistica].",
+      "certificazioni": [
+        "Dichiarazione di conformità e omologazione estintori",
+        "Contratto di manutenzione presidi mobili",
+        "Dichiarazioni di conformità valvole, pressostati e vasi d'espansione",
+        "Dichiarazione di conformità impianto adduzione gas",
+        "Prova di tenuta tubazione gas metano",
+        "Dichiarazione di conformità impianto rivelazione gas"
+      ],
+      "umDefault": "a corpo"
+    },
+    {
+      "id": "g5",
+      "titolo": "Locale soppalco (vasi di espansione)",
+      "attivita": [
+        "74.2.B"
+      ],
+      "rifNormativo": "D.M. 12/04/1996",
+      "testo": "Conformemente al progetto approvato, all'interno della centrale termica è stato realizzato un soppalco per l'alloggiamento dei vasi di espansione. Le aperture del soppalco che si affacciano sulla centrale termica devono essere chiuse con materiali REI [classe, tipicamente 120]. Si ricorda inoltre che il locale non deve essere utilizzato come deposito di materiale di qualsiasi natura: si provveda alla rimozione del materiale combustibile e incombustibile eventualmente presente.",
+      "certificazioni": [
+        "Dichiarazione di conformità opere edili chiusura REI",
+        "Dichiarazione di corretta posa"
+      ],
+      "umDefault": "a corpo"
+    },
+    {
+      "id": "g6",
+      "titolo": "Locali macchine ascensori",
+      "attivita": [
+        "77.1.A"
+      ],
+      "rifNormativo": "D.M. 16/05/1987 n. 246 (punti 2.5.0 e 2.5.1)",
+      "testo": "Il punto 2.5.1 del D.M. 16/05/87 richiede che il locale macchine abbia aerazione permanente non inferiore al 3% della superficie in pianta e comunque non inferiore a 0,05 mq (il punto 2.5.0 richiede analoga aerazione, minimo 0,20 mq, per il vano corsa). Al momento del sopralluogo non è stata rilevata la presenza dell'aerazione permanente prescritta. Si provveda alla realizzazione di un'apertura di aerazione sfociante all'esterno, di superficie non inferiore a [misura] mq, oppure all'installazione di un camino sulla copertura di raggio almeno pari a 20 cm. La porta di accesso al locale macchine dovrà avere resistenza al fuoco equivalente a quella del vano corsa: al momento del sopralluogo non rispettava tali caratteristiche, pertanto sarà necessario sostituirla con modello dotato di dispositivo di autochiusura.",
+      "certificazioni": [
+        "Certificazione porte REI",
+        "Dichiarazione di corretta posa delle porte REI"
+      ],
+      "umDefault": "cad"
+    },
+    {
+      "id": "g7",
+      "titolo": "Autorimessa — vie d'esodo e uscite di sicurezza",
+      "attivita": [
+        "75.1.A",
+        "75.2.B",
+        "75.4.C"
+      ],
+      "rifNormativo": "Codice di prevenzione incendi, Cap. V.6 \"Autorimesse\"",
+      "testo": "L'autorimessa oggetto di relazione si sviluppa su [numero] piano/i ed ha superficie di compartimento pari a [valore] mq, con capacità ricettiva di n° [numero] autovetture (n° [numero] box, n° [numero] posti auto). Il progetto approvato prevede un sistema d'esodo composto da n° [numero] uscite di sicurezza [dettaglio]. Al momento del sopralluogo è stata rilevata la presenza di n° [numero] porte [grigliate/in ferro] in condizioni [vetuste/di degrado]: essendo le uscite direttamente accessibili dal corsello senza porte in progetto, se ne prescrive la rimozione. È stata riscontrata la presenza di tubazioni [PVC/fognarie] passanti nei corridoi delle cantine/retro box: sarà necessario posare collari termo-espandenti in corrispondenza degli attraversamenti. Si ricorda che nell'autorimessa è vietato fumare: si provveda a rimuovere posacenere e cartello correlato, ove presenti.",
+      "certificazioni": [
+        "Certificazione porte REI",
+        "Dichiarazione di conformità maniglioni antipanico",
+        "Dichiarazione di conformità collari termo-espandenti",
+        "Dichiarazione di corretta posa dei collari"
+      ],
+      "umDefault": "a corpo"
+    },
+    {
+      "id": "g8",
+      "titolo": "Illuminazione di emergenza autorimessa",
+      "attivita": [
+        "75.1.A",
+        "75.2.B",
+        "75.4.C"
+      ],
+      "rifNormativo": "Codice di prevenzione incendi § S.4.5.10 · Cap. V.6 \"Autorimesse\"",
+      "testo": "Il compartimento autorimessa dovrà essere servito da un sistema di illuminazione d'emergenza che intervenga in mancanza di alimentazione elettrica. Al momento del sopralluogo è stato possibile verificare la presenza di un sistema di illuminazione apparentemente ordinario a servizio dei corselli comuni; non è stato possibile accertare se le lampade integrassero anche la funzione di emergenza. In caso negativo, sarà necessario predisporre un idoneo sistema di illuminazione di emergenza a copertura dell'intera autorimessa.",
+      "certificazioni": [
+        "Dichiarazione di conformità impianto elettrico/illuminazione d'emergenza (D.M. 37/08)"
+      ],
+      "umDefault": "a corpo"
+    },
+    {
+      "id": "g9",
+      "titolo": "Mezzi di estinzione — estintori portatili",
+      "attivita": [
+        "75.1.A",
+        "75.2.B",
+        "75.4.C"
+      ],
+      "rifNormativo": "Codice di prevenzione incendi § S.6.6.2.1 · D.Lgs. 81/08 (manutenzione)",
+      "testo": "Al momento del sopralluogo sono stati riscontrati n° [numero] estintori. Tali dispositivi devono possedere capacità estinguente non inferiore a [valore, es. 13A-223B / 21A-89BC / 34A-144B], essere corredati da cartellonistica di ampiezza sufficiente per un'immediata individuazione e da cartellino delle manutenzioni semestrali (D.Lgs. 81/08). [Eventuale: sono stati rinvenuti n° [numero] estintori abbandonati/in eccesso rispetto al progetto approvato; se ne prescrive la rimozione].",
+      "certificazioni": [
+        "Dichiarazione di conformità e omologazione estintori",
+        "Contratto di manutenzione presidi mobili"
+      ],
+      "umDefault": "cad"
+    },
+    {
+      "id": "g10",
+      "titolo": "Mezzi di estinzione — rete idranti",
+      "attivita": [
+        "77.1.A",
+        "75.1.A",
+        "75.2.B",
+        "75.4.C"
+      ],
+      "rifNormativo": "Codice di prevenzione incendi § S.6.8 · UNI 10779:2014 · UNI EN 671-3",
+      "testo": "[Il vano scala / l'autorimessa] è dotato di rete idranti costituita da una colonna montante dal piano [rialzato/terra] al piano [numero] e da un attacco di mandata per motopompa VV.F. installato in prossimità dell'ingresso, corredato di cartellonistica. Gli idranti dovranno essere provvisti di tubazione flessibile UNI 45 lunga 20 m e lancia d'erogazione UNI 45, con cartellonistica per l'immediata individuazione. L'impianto, collegato all'acquedotto comunale e mantenuto in pressione, dovrà garantire 2 BAR e portata non inferiore a 120 l/min all'idrante idraulicamente più sfavorito, con apertura contemporanea dei 2 idranti più sfavoriti. Durante il sopralluogo è stata eseguita la prova [idrostatica/di pressione], esito [positivo/negativo] [rilevando pressione dinamica pari a [valore] bar]. Al momento del sopralluogo [alcune manichette risultavano obsolete e prive di manutenzione semestrale / un idrante era privo di cassetta o vetro safe-crash / si segnala l'assenza di idranti ai piani [numeri]].",
+      "certificazioni": [
+        "Dichiarazione di conformità rete idranti",
+        "Dichiarazione di conformità e omologazione idranti con verifiche UNI EN 671-3",
+        "Contratto di manutenzione presidi fissi"
+      ],
+      "umDefault": "cad"
+    },
+    {
+      "id": "g11",
+      "titolo": "Cartelli e segnaletica di sicurezza",
+      "attivita": [
+        "74.1.A",
+        "74.2.B",
+        "75.1.A",
+        "75.2.B",
+        "75.4.C",
+        "77.1.A"
+      ],
+      "rifNormativo": "Codice di prevenzione incendi §§ S.4.5.9, S.6.11 · D.Lgs. 81/08",
+      "testo": "Si provveda all'installazione della cartellonistica indicante percorsi e vie d'esodo ad ogni piano [del vano scala / dei vani scala] dal [piano] al [rialzato]. Si ricorda che i presidi (estintori, idranti, pulsante di sgancio, attacco motopompa) devono essere corredati di cartellonistica conforme al D.Lgs. 81/08, atta a garantirne un'immediata individuazione. È stata riscontrata l'assenza della segnaletica relativa a [elemento]: sarà necessario provvedere alla sua installazione.",
+      "certificazioni": [],
+      "umDefault": "cad"
+    },
+    {
+      "id": "g12",
+      "titolo": "Impianto elettrico e messa a terra",
+      "attivita": [
+        "74.1.A",
+        "74.2.B",
+        "75.1.A",
+        "75.2.B",
+        "75.4.C"
+      ],
+      "rifNormativo": "D.M. 37/08",
+      "testo": "Si richiede la dichiarazione di conformità al D.M. 37/08 dell'impianto elettrico, corredata da progetto, schema d'impianto, relazione sulla tipologia dei materiali e requisiti tecnico-professionali dell'impresa esecutrice. Per impianti non ricadenti nel campo di applicazione del D.M. 37/08 è comunque necessario fornire dichiarazione di conformità corredata da certificazione di verifica rilasciata da tecnico iscritto ad albo professionale.",
+      "certificazioni": [
+        "Dichiarazione di conformità impianto elettrico (D.M. 37/08)",
+        "Messa a terra",
+        "Denuncia impianto I.N.A.I.L. (ex I.S.P.E.S.L.)"
+      ],
+      "umDefault": "a corpo"
+    }
+  ],
+  "umOptions": [
+    "a corpo",
+    "cad",
+    "mq",
+    "ml",
+    "kg",
+    "h"
+  ],
+  "conclusioniDefault": "Dalle verifiche effettuate in sede di sopralluogo risulta che lo stato dei luoghi non è pienamente conforme a quanto richiesto dalla normativa vigente in materia di prevenzione incendi. Si invita pertanto l'amministrazione dello stabile a dare corso alle opere di adeguamento sopra descritte, avvalendosi di imprese e installatori qualificati, e a produrre, ad opere ultimate, le certificazioni e dichiarazioni di conformità elencate nel presente elaborato. Si rammenta che, ad opere concluse, dovrà essere presentata al Comando Provinciale dei Vigili del Fuoco competente per territorio la Segnalazione Certificata di Inizio Attività (S.C.I.A.), corredata della documentazione tecnica richiesta, ai sensi del D.P.R. 151/2011 e dell'art. 20 del D.Lgs. 139/2006."
+}
