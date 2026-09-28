@@ -298,7 +298,50 @@ export function sincronizza(s: Sopralluogo, catalogo: Catalogo): Sopralluogo {
     }
   }
 
-  const sezioni = nuoveSez.length ? [...s.sezioni, ...nuoveSez] : s.sezioni;
+  // una sezione nuova della libreria va al suo posto (dopo quelle che la precedono in libreria)
+  const sezioni = [...s.sezioni];
+  for (const nuova of nuoveSez) {
+    const ordine = famigliaDi(catalogo, nuova.attivita)?.sezioni.map((x) => x.id) ?? [];
+    const pos = ordine.indexOf(nuova.sezioneId ?? '');
+    let dopo = -1;
+    sezioni.forEach((x, j) => {
+      if (x.attivita === nuova.attivita && ordine.indexOf(x.sezioneId ?? '') < pos && ordine.indexOf(x.sezioneId ?? '') >= 0) dopo = j;
+    });
+    if (dopo < 0) {
+      const ultimaStessaAttivita = sezioni.map((x) => x.attivita).lastIndexOf(nuova.attivita);
+      dopo = pos === 0 ? sezioni.findIndex((x) => x.attivita === nuova.attivita) - 1 : ultimaStessaAttivita;
+      if (dopo < -1) dopo = sezioni.length - 1;
+    }
+    sezioni.splice(dopo + 1, 0, nuova);
+  }
+
+  // Frasi spostate in un'altra sezione della libreria (es. locale macchine ascensore):
+  // le istanze già esistenti seguono la frase nella nuova sezione, con quanto già compilato.
+  let voci = s.voci;
+  let spostate = false;
+  const sezioneDiVoce = new Map<string, string>();
+  for (const f of catalogo.famiglie) for (const sc of f.sezioni) for (const v of sc.voci) sezioneDiVoce.set(v.id, sc.id);
+  for (const v of s.voci) {
+    const sez = sezioni.find((x) => x.key === v.sezioneKey);
+    const giusta = v.voceId ? sezioneDiVoce.get(v.voceId) : undefined;
+    if (!sez?.sezioneId || !giusta || sez.sezioneId === giusta || sez.key.includes('#')) continue;
+    const destinazione = `${giusta}@${v.attivita}`;
+    if (!sezioni.some((x) => x.key === destinazione)) continue;
+    const nuovaKey = `${v.voceId}@${destinazione}`;
+    const doppione = voci.find((x) => x.key === nuovaKey);
+    const intatta = (x: VoceIstanza) =>
+      !x.selezionata && !x.fotoIds.length && !x.note.trim() && x.testo === catalogo.famiglie
+        .flatMap((f) => f.sezioni.flatMap((sc) => sc.voci))
+        .find((y) => y.id === x.voceId)?.testo;
+    if (doppione && !intatta(doppione)) continue; // entrambe compilate: restano tutte e due
+    voci = voci
+      .filter((x) => x !== doppione)
+      .map((x) => (x === v ? { ...x, key: nuovaKey, sezioneKey: destinazione } : x));
+    vociKeys.delete(v.key);
+    vociKeys.add(nuovaKey);
+    spostate = true;
+  }
+
   const nuoveVoci: VoceIstanza[] = [];
   for (const sez of sezioni) {
     if (!sez.sezioneId) continue;
@@ -311,13 +354,42 @@ export function sincronizza(s: Sopralluogo, catalogo: Catalogo): Sopralluogo {
     }
   }
 
-  if (!nuoveSez.length && !nuoveVoci.length && !nuoveExtra.length) return s;
+  if (!nuoveSez.length && !nuoveVoci.length && !nuoveExtra.length && !spostate) return s;
   return {
     ...s,
     sezioni,
-    voci: nuoveVoci.length ? [...s.voci, ...nuoveVoci] : s.voci,
+    voci: nuoveVoci.length ? [...voci, ...nuoveVoci] : voci,
     righeExtra: nuoveExtra.length ? [...s.righeExtra, ...nuoveExtra] : s.righeExtra,
   };
+}
+
+/** Scambia due elementi di un array (copia). */
+function scambia<T>(a: T[], i: number, j: number): T[] {
+  const b = [...a];
+  [b[i], b[j]] = [b[j], b[i]];
+  return b;
+}
+
+/** Sposta una sezione su (-1) o giù (+1) tra quelle della stessa attività: cambia anche l'ordine nel Word. */
+export function spostaSezione(s: Sopralluogo, key: string, verso: -1 | 1): Sopralluogo {
+  const sez = s.sezioni.find((x) => x.key === key);
+  if (!sez) return s;
+  const indici = s.sezioni.map((x, i) => (x.attivita === sez.attivita ? i : -1)).filter((i) => i >= 0);
+  const pos = indici.indexOf(s.sezioni.indexOf(sez));
+  const altro = indici[pos + verso];
+  if (altro === undefined) return s;
+  return { ...s, sezioni: scambia(s.sezioni, indici[pos], altro) };
+}
+
+/** Sposta una frase su (-1) o giù (+1) nella sua sezione: cambia l'ordine a) b) c) nel Word. */
+export function spostaVoce(s: Sopralluogo, key: string, verso: -1 | 1): Sopralluogo {
+  const v = s.voci.find((x) => x.key === key);
+  if (!v) return s;
+  const indici = s.voci.map((x, i) => (x.sezioneKey === v.sezioneKey ? i : -1)).filter((i) => i >= 0);
+  const pos = indici.indexOf(s.voci.indexOf(v));
+  const altro = indici[pos + verso];
+  if (altro === undefined) return s;
+  return { ...s, voci: scambia(s.voci, indici[pos], altro) };
 }
 
 /** Duplica una sezione (es. "Vano scala" → "Vano scala B") con tutte le voci di libreria, vuote. */

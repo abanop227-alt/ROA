@@ -994,3 +994,19 @@ textarea:focus {
   border-radius: 6px;
   background: #fff;
 }
+.frecce {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.frecce .btn-icona {
+  font-size: 1.1rem;
+  min-height: 40px;
+}
+.frecce .btn-icona:disabled {
+  opacity: 0.25;
+}
+.riordino {
+  margin-top: 4px;
+}

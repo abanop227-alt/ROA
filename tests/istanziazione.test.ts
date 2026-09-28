@@ -10,6 +10,8 @@ import {
   nonAggravioEffettivo,
   sezioniDiAttivita,
   sincronizza,
+  spostaSezione,
+  spostaVoce,
   testoConclusioniAutomatico,
   validaCatalogo,
   vociDiSezione,
@@ -179,5 +181,51 @@ describe('istanziazione per attività', () => {
     expect(s.attivita[0].nProgetto).toBe('12');
     expect(s.condominio.committente).toBe('Cond. Alfa');
     expect(s.voci.length).toBeGreaterThan(5);
+  });
+
+  it('riordina frasi nella sezione e sezioni nell’attività (l’ordine va nel Word)', () => {
+    let s = sopralluogoCon(['74.1.A', '77.1.A']);
+    const vs = sezioniDiAttivita(s, '77.1.A')[0];
+    const prima = vociDiSezione(s, vs.key).map((v) => v.voceId);
+    s = spostaVoce(s, `${prima[1]}@${vs.key}`, -1);
+    expect(vociDiSezione(s, vs.key).map((v) => v.voceId)).toEqual([prima[1], prima[0], ...prima.slice(2)]);
+    // la prima non sale oltre, l'ultima non scende oltre
+    expect(spostaVoce(s, `${prima[1]}@${vs.key}`, -1)).toBe(s);
+    s = spostaSezione(s, vs.key, 1);
+    expect(sezioniDiAttivita(s, '77.1.A').map((x) => x.titolo).slice(0, 2)).toEqual(['Locale macchine ascensore', 'Vano scala']);
+    // le sezioni della 74 non si mescolano con la 77
+    expect(sezioniDiAttivita(s, '74.1.A')[0].titolo).toBe('Locale centrale termica');
+    expect(spostaSezione(s, sezioniDiAttivita(s, '74.1.A')[0].key, -1)).toBe(s);
+    // ordine nel documento
+    for (const v of vociDiSezione(s, vs.key).slice(0, 2)) v.selezionata = true;
+    const g = gruppiDocumento(s).find((x) => x.attivita.codice === '77.1.A')!;
+    expect(g.sezioni[0].voci.map((v) => v.voceId)).toEqual([prima[1], prima[0]]);
+  });
+
+  it('frasi spostate in un’altra sezione della libreria: seguono la sezione senza doppioni né perdite', () => {
+    // sopralluogo creato quando le frasi del locale macchine stavano in "Vano scala"
+    let s = sopralluogoCon(['77.1.A']);
+    const lm = sezioniDiAttivita(s, '77.1.A').find((x) => x.sezioneId === '77-lm')!;
+    s = {
+      ...s,
+      sezioni: s.sezioni.filter((x) => x !== lm),
+      voci: s.voci
+        .filter((v) => v.sezioneKey !== lm.key || v.voceId === '77-vs-lma-porta-80')
+        .map((v) =>
+          v.sezioneKey === lm.key
+            ? { ...v, key: `${v.voceId}@77-vs@77.1.A`, sezioneKey: '77-vs@77.1.A', selezionata: true, fotoIds: ['f1'] }
+            : v,
+        ),
+    };
+    const dopo = sincronizza(s, cat);
+    const sez = sezioniDiAttivita(dopo, '77.1.A');
+    expect(sez.map((x) => x.titolo)).toEqual(['Vano scala', 'Locale macchine ascensore', 'Mezzi di estinzione', 'Cartelli e segnaletica di sicurezza']);
+    const porta = dopo.voci.filter((v) => v.voceId === '77-vs-lma-porta-80');
+    expect(porta).toHaveLength(1);
+    expect(porta[0].sezioneKey).toBe('77-lm@77.1.A');
+    expect(porta[0].selezionata).toBe(true);
+    expect(porta[0].fotoIds).toEqual(['f1']);
+    expect(vociDiSezione(dopo, '77-vs@77.1.A').some((v) => v.voceId?.startsWith('77-vs-lma'))).toBe(false);
+    expect(sincronizza(dopo, cat)).toBe(dopo);
   });
 });

@@ -95,9 +95,26 @@ interface Props {
   onApri: () => void;
   onModifica: (f: (v: VoceIstanza) => VoceIstanza) => void;
   onElimina: () => void;
+  /** modalità riordino: frecce per spostare la frase nella sezione */
+  riordina?: boolean;
+  primo?: boolean;
+  ultimo?: boolean;
+  onSposta?: (verso: -1 | 1) => void;
 }
 
-export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri, onModifica, onElimina }: Props) {
+export default function VoceCard({
+  voce,
+  sopralluogoId,
+  catalogo,
+  aperta,
+  onApri,
+  onModifica,
+  onElimina,
+  riordina,
+  primo,
+  ultimo,
+  onSposta,
+}: Props) {
   const areaTesto = useRef<HTMLTextAreaElement | null>(null);
   const segnaposto = contaSegnaposto(voce.testo);
   const originale = voce.voceId
@@ -147,9 +164,20 @@ export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri
             {voce.selezionata && lavorazioni > 0 && <span className="badge">€ computo · {lavorazioni}</span>}
           </span>
         </button>
-        <span className="chevron" aria-hidden onClick={onApri}>
-          {aperta ? '▴' : '▾'}
-        </span>
+        {riordina ? (
+          <span className="frecce">
+            <button className="btn-icona" aria-label="Sposta su" disabled={primo} onClick={() => onSposta?.(-1)}>
+              ▲
+            </button>
+            <button className="btn-icona" aria-label="Sposta giù" disabled={ultimo} onClick={() => onSposta?.(1)}>
+              ▼
+            </button>
+          </span>
+        ) : (
+          <span className="chevron" aria-hidden onClick={onApri}>
+            {aperta ? '▴' : '▾'}
+          </span>
+        )}
       </div>
 
       {aperta && (

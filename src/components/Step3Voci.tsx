@@ -2,6 +2,8 @@ import { useState } from 'react';
 import {
   duplicaSezione,
   famigliaDi,
+  spostaSezione,
+  spostaVoce,
   nuovaSezionePersonalizzata,
   nuovaVocePersonalizzata,
   sezioniDiAttivita,
@@ -51,7 +53,10 @@ function Sezione({
   const [chiusa, setChiusa] = useState(false);
   const [menu, setMenu] = useState(false);
   const [aperta, setAperta] = useState<string | null>(null);
+  const [riordina, setRiordina] = useState(false);
   const voci = vociDiSezione(s, sezione.key);
+  const sezioniAttivita = s.sezioni.filter((x) => x.attivita === sezione.attivita);
+  const posSezione = sezioniAttivita.indexOf(sezione);
   const spuntate = voci.filter((v) => v.selezionata).length;
   const eliminabile = !sezione.sezioneId || sezione.key.includes('#');
 
@@ -108,6 +113,30 @@ function Sezione({
           <button className="btn" onClick={duplica}>
             Duplica sezione
           </button>
+          <button
+            className="btn"
+            disabled={posSezione <= 0}
+            onClick={() => aggiorna((x) => spostaSezione(x, sezione.key, -1))}
+          >
+            ▲ Sposta su
+          </button>
+          <button
+            className="btn"
+            disabled={posSezione >= sezioniAttivita.length - 1}
+            onClick={() => aggiorna((x) => spostaSezione(x, sezione.key, 1))}
+          >
+            ▼ Sposta giù
+          </button>
+          <button
+            className={`btn ${riordina ? 'btn-primario' : ''}`}
+            onClick={() => {
+              setRiordina(!riordina);
+              setChiusa(false);
+              setMenu(false);
+            }}
+          >
+            {riordina ? '✓ Fine riordino' : '⇅ Riordina frasi'}
+          </button>
           {eliminabile && (
             <button className="btn btn-pericolo" onClick={elimina}>
               Elimina
@@ -117,8 +146,16 @@ function Sezione({
       )}
       {!chiusa && (
         <>
+          {riordina && (
+            <div className="promemoria riordino">
+              <span>Usa ▲ ▼ per cambiare l’ordine delle frasi: nel Word diventa a), b), c)…</span>
+              <button className="btn btn-piccolo" onClick={() => setRiordina(false)}>
+                Fine
+              </button>
+            </div>
+          )}
           <ul className="lista-voci">
-            {voci.map((v) => (
+            {voci.map((v, i) => (
               <VoceCard
                 key={v.key}
                 voce={v}
@@ -128,6 +165,10 @@ function Sezione({
                 onApri={() => setAperta(aperta === v.key ? null : v.key)}
                 onModifica={(f) => modificaVoce(v.key, f)}
                 onElimina={() => aggiorna((x) => ({ ...x, voci: x.voci.filter((y) => y.key !== v.key) }))}
+                riordina={riordina}
+                primo={i === 0}
+                ultimo={i === voci.length - 1}
+                onSposta={(verso) => aggiorna((x) => spostaVoce(x, v.key, verso))}
               />
             ))}
           </ul>
