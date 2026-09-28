@@ -9,7 +9,6 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'ROA Antincendio',
         short_name: 'ROA',
