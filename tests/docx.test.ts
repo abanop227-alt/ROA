@@ -2,157 +2,208 @@ import { readFileSync } from 'node:fs';
 import JSZip from 'jszip';
 import { Packer } from 'docx';
 import { describe, expect, it } from 'vitest';
-import { nuovaVocePersonalizzata } from '../src/lib/catalogo';
-import { creaDocumento, nomeFileDocx, tipoImmagine, type FotoDati } from '../src/lib/docx';
-import type { Sopralluogo } from '../src/lib/types';
-import { sopralluogoCon } from './aiuti';
+import { duplicaSezione, sezioniDiAttivita, tecnicoVuoto } from '../src/lib/catalogo';
+import { creaDocumento, didascaliaFoto, nomeFileDocx, testoConRiferimentoFoto, tipoImmagine, type FotoDati } from '../src/lib/docx';
+import type { Sopralluogo, Tecnico } from '../src/lib/types';
+import { cat, sopralluogoCon, voce } from './aiuti';
 
 const jpg = new Uint8Array(readFileSync(new URL('./fixtures/foto.jpg', import.meta.url)));
 const png = new Uint8Array(readFileSync(new URL('./fixtures/foto.png', import.meta.url)));
-const archivioFoto: Record<string, FotoDati> = {
+const archivio: Record<string, FotoDati> = {
   f1: { data: jpg, width: 160, height: 120 },
   f2: { data: png, width: 60, height: 90 },
+  f3: { data: jpg, width: 160, height: 120 },
+  cop: { data: jpg, width: 160, height: 120 },
 };
-const carica = async (id: string) => archivioFoto[id] ?? null;
+const carica = async (id: string) => archivio[id] ?? null;
+const tecnico: Tecnico = {
+  ...tecnicoVuoto,
+  intestazione: 'Tecnico: Geom. Mario Rossi\nIscritto all’albo n° 0000',
+  firma: 'Geom. Mario Rossi',
+  societa: 'STUDIO SRL',
+  iniziali: 'M.R.',
+};
 
 function esempio(): Sopralluogo {
-  const s = sopralluogoCon(['74.1.A', '75.1.A']);
-  s.condominio.committente = 'Condominio Via Verdi 12';
-  s.condominio.indirizzo = 'Via Verdi 12';
-  s.condominio.comune = 'Milano';
-  s.condominio.dataSopralluogo = '2026-09-28';
-  s.condominio.telefono = '02 1234567';
-  s.attivita[0].nProgetto = '12345';
-  s.attivita[0].dataApprovazione = '2010-05-04';
-  s.attivita[0].datoDimensionale = '250 kW';
-  s.attivita[1].nProgetto = '67890';
-  s.attivita[1].dataApprovazione = '2012-01-20';
-  s.attivita[1].datoDimensionale = '800 mq';
-  const cartelli74 = s.voci.find((v) => v.key === 'g11@74.1.A')!;
-  cartelli74.selezionata = true;
-  cartelli74.note = 'Manca cartello estintore al piano -1';
-  cartelli74.fotoIds = ['f1', 'f2', 'mancante'];
-  cartelli74.computo.quantita = '4';
-  cartelli74.computo.prezzo = '1234,5';
-  const filtri = s.voci.find((v) => v.key === 'g0@75.1.A')!;
-  filtri.selezionata = true;
-  filtri.computo.quantita = '2';
-  filtri.computo.prezzo = '800';
-  const pers = nuovaVocePersonalizzata(null);
-  pers.titolo = 'Pulizia locali comuni';
-  pers.testo = 'Si provveda alla pulizia.';
-  pers.certificazioni.push({ testo: 'Certificazione porte REI', richiesta: true });
-  s.voci.push(pers);
+  let s = sopralluogoCon(['74.1.A', '77.1.A']);
+  Object.assign(s.condominio, {
+    nome: 'Alfa',
+    indirizzo: 'Via Verdi, 12',
+    cap: '20100',
+    comune: 'Milano',
+    codiceFiscale: '80000000000',
+    telefono: '02 1234567',
+    commessa: '123/26',
+    dataRelazione: '2026-09-28',
+  });
+  s.fotoCopertinaId = 'cop';
+  Object.assign(s.attivita[0], { nProgetto: '342224', dataApprovazione: '2001-06-08', datoDimensionale: '127,90' });
+  Object.assign(s.attivita[1], { riferimento: 'regola', datoDimensionale: '25,20' });
+
+  const pot = voce(s, '74-ct-pot-ok');
+  pot.selezionata = true;
+  pot.testo = pot.testo.replace('[valore]', '127,90');
+  pot.fotoIds = ['f1'];
+  pot.note = 'APPUNTO PRIVATO';
+  const aer = voce(s, '77-vs-aer-no');
+  aer.selezionata = true;
+  aer.fotoIds = ['f2', 'f3', 'mancante'];
+  aer.lavorazioni[0].quantita = '2';
+  aer.lavorazioni[0].prezzo = '1234,5';
+  voce(s, '77-me-uni10779').selezionata = true;
+  s = duplicaSezione(s, cat, sezioniDiAttivita(s, '77.1.A')[0].key, 'Vano scala B');
+  const b = s.voci.find((v) => v.voceId === '77-vs-aer-ok' && v.sezioneKey.includes('#'))!;
+  b.selezionata = true;
+  s.cartelli.push({ key: 'c1', quantita: '8', descrizione: 'cartelli da applicare in tutti i piani' });
+  s.notaBene = 'Nota di prova.';
   return s;
 }
 
 async function apri(s: Sopralluogo) {
-  const buf = await Packer.toBuffer(await creaDocumento(s, carica));
+  const buf = await Packer.toBuffer(await creaDocumento(s, cat, tecnico, carica));
   const zip = await JSZip.loadAsync(buf);
   const xml = await zip.file('word/document.xml')!.async('string');
-  // testo "piatto" dei paragrafi
   const testo = [...xml.matchAll(/<w:p[ >][\s\S]*?<\/w:p>/g)]
-    .map((p) => [...p[0].matchAll(/<w:t(?: [^>]*)?>([^<]*)<\/w:t>/g)].map((t) => t[1]).join(''))
+    .map((p) => [...p[0].matchAll(/<w:t(?: [^>]*)?>([^<]*)<\/w:t>|<w:tab\/>/g)].map((t) => t[1] ?? ' ').join(''))
     .join('\n')
     .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&');
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"');
   return { buf, zip, xml, testo };
 }
 
 describe('generazione del .docx', () => {
-  it('produce un file Word valido (zip OOXML) che contiene tutte le sezioni', async () => {
-    const { buf, zip, xml, testo } = await apri(esempio());
+  it('è un file Word valido con frontespizio, indice e tutte le sezioni nell’ordine delle ROA', async () => {
+    const { buf, zip, testo } = await apri(esempio());
     expect(buf.subarray(0, 2).toString()).toBe('PK');
-    expect(zip.file('[Content_Types].xml')).toBeTruthy();
     expect(zip.file('word/styles.xml')).toBeTruthy();
-    expect(xml).toContain('<w:document');
-
-    expect(testo).toContain("VERIFICA DELLO STATO DEI LUOGHI PER L'ADEGUAMENTO DELLO STABILE");
-    expect(testo).toContain('Relativamente al Condominio Via Verdi 12');
-    expect(testo).toContain('AI FINI DELLA PREVENZIONE INCENDI');
-    for (const sez of [
-      '1. Parte generale',
-      '2. Esposizione della consulenza',
-      '2.1 Attività 74.1.A',
-      '2.2 Attività 75.1.A',
-      '2.3 Prescrizioni generali',
-      '3. Certificazioni e documentazioni da produrre',
-      '4. Computo metrico delle opere',
-      '5. Conclusioni',
-    ]) {
-      expect(testo).toContain(sez);
+    const ordine = [
+      'VERIFICA DELLO STATO DEI LUOGHI',
+      'PER L’ADEGUAMENTO DELLO STABILE',
+      'AL PROGETTO APPROVATO IL 08/06/2001 AL N°342224 PER ATT. 74.1.A',
+      'E AL D.M. 16/05/1987 N° 246 PER ATT. 77.1.A',
+      'RELATIVAMENTE AL CONDOMINIO ALFA',
+      'VIA VERDI, 12 – MILANO',
+      'AI FINI DELLA PREVENZIONE INCENDI',
+      'INDICE',
+      '1 PARTE GENERALE',
+      'Tecnico: Geom. Mario Rossi',
+      'Committente:',
+      'Lo scopo del presente elaborato consiste in:',
+      '1) Verificare che lo stato di fatto sia conforme al progetto approvato il 08/06/2001 al N° 342224 per attività:',
+      '74.1.A: Impianti per la produzione di calore alimentati a combustibile solido, liquido o gassoso con potenzialità pari a 127,90 kW.',
+      'Verificare che lo stato di fatto sia conforme al D.M. 16/05/1987 n° 246 per attività:',
+      '77.1.A: Edifici destinati ad uso civile con altezza antincendio pari a 25,20 m.',
+      '2) Elencare le certificazioni',
+      'le attività soggette al controllo del Comando dei Vigili del Fuoco presente nel Condominio in oggetto sono identificate al numero del D.P.R. 151/11:',
+      '2 ESPOSIZIONE DELLA CONSULENZA',
+      'Regolamento recante disciplina',
+      '2.1 ADEGUAMENTI',
+      '2.1.1 ATTIVITA’ “74.1.A”',
+      'D.M. 12 aprile 1996.',
+      '2.1.1.1 Locale centrale termica',
+      'pari a 127,90 kW, rispetto al progetto approvato dal Comando dei VV.F. (foto 1).',
+      'Foto 1 – Portata termica riscontrata.',
+      '2.1.2 ATTIVITA’ “77.1.A”',
+      '2.1.2.1 Vano scala',
+      'Foto 2 – Foto 3 – Apertura di aerazione del vano scala.',
+      '2.1.2.2 Vano scala B',
+      '2.1.2.3 Mezzi di estinzione',
+      'UNI 10779-2014',
+      '2.2 ORDINE CARTELLI E SEGNALETICA DI SICUREZZA',
+      'n° 8 cartelli da applicare in tutti i piani',
+      '3 CERTIFICAZIONI',
+      '3.1 ATTIVITA’ “74.1.A”',
+      '3.2 ATTIVITA’ “77.1.A”',
+      'Per impianti non ricadenti nel campo di applicazione del D.M. 37/08',
+      '¹Nei casi in cui la dichiarazione di conformità',
+      '4 CONCLUSIONI',
+      'Lo stato attuale dei luoghi non risulta dunque conforme',
+      'Si precisa che la mancata e/o omessa presentazione della SCIA',
+      '5 COMPUTO METRICO DELLE OPERE',
+      'Edificio di civile abitazione:',
+      'Nota bene:',
+      'Ritenendo pertanto concluso il nostro incarico',
+      'Geom. Mario Rossi',
+    ];
+    let da = 0;
+    for (const t of ordine) {
+      const i = testo.indexOf(t, da);
+      expect(i, `manca o fuori ordine: "${t}"`).toBeGreaterThanOrEqual(0);
+      da = i + t.length;
     }
-    expect(testo).toContain('2.1.1 Cartelli e segnaletica di sicurezza');
-    expect(testo).toContain('2.2.1 Filtri a prova di fumo vani scala / autorimessa');
-    expect(testo).toContain('Note dal sopralluogo: Manca cartello estintore al piano -1');
-    expect(testo).toContain('Lo scopo del presente elaborato consiste in:');
-    expect(testo).toContain('progetto approvato al N° 12345 del 04/05/2010');
-    expect(testo).toContain('dato dimensionale: 800 mq');
-    expect(testo).toContain('le attività soggette al controllo del Comando dei Vigili del Fuoco');
+    // le frasi di aerazione hanno il riferimento alle foto
+    expect(testo).toContain('n°[4] vetri presenti (foto 2 – 3).');
+    // appunti privati e parti non spuntate esclusi
+    expect(testo).not.toContain('APPUNTO PRIVATO');
+    expect(testo).not.toContain('Canna fumaria');
+    // 74 senza voci nel computo → nessuna tabella "Centrale termica"
+    expect(testo).not.toContain('Centrale termica:');
   });
 
-  it('usa gli stili Heading, A4 e Arial 11', async () => {
+  it('stili Heading 1-4, indice automatico, A4, Arial 11, piè di pagina', async () => {
     const { zip, xml } = await apri(esempio());
-    expect(xml).toContain('w:val="Heading1"');
-    expect(xml).toContain('w:val="Heading2"');
-    expect(xml).toContain('w:val="Heading3"');
+    for (const h of ['Heading1', 'Heading2', 'Heading3', 'Heading4']) expect(xml).toContain(`w:val="${h}"`);
+    expect(xml).toMatch(/TOC \\h \\o &quot;1-4&quot;/);
     expect(xml).toMatch(/<w:pgSz[^>]*w:w="11906"[^>]*w:h="16838"/);
     const stili = await zip.file('word/styles.xml')!.async('string');
     expect(stili).toContain('Arial');
     expect(stili).toMatch(/<w:docDefaults>[\s\S]*<w:sz w:val="22"\/>/);
+    const settings = await zip.file('word/settings.xml')!.async('string');
+    expect(settings).toContain('updateFields');
+    const piede = Object.keys(zip.files).find((f) => /word\/footer\d*\.xml/.test(f))!;
+    const xmlPiede = await zip.file(piede)!.async('string');
+    expect(xmlPiede).toContain('STUDIO SRL n°123/26');
+    expect(xmlPiede).toContain('Pagina ');
+    expect(xmlPiede).toContain('M.R.');
+    expect(xmlPiede).toContain('28/09/2026');
   });
 
-  it('incorpora le foto (jpg e png) a ~8 cm mantenendo le proporzioni', async () => {
+  it('foto: copertina + 3 foto (jpg e png), a coppie da 8 cm, singola da 10 cm, proporzioni mantenute', async () => {
     const { zip, xml } = await apri(esempio());
     const media = Object.keys(zip.files).filter((f) => f.startsWith('word/media/'));
-    expect(media.some((f) => f.endsWith('.jpg') || f.endsWith('.jpeg'))).toBe(true);
+    expect(media.some((f) => /\.jpe?g$/.test(f))).toBe(true);
     expect(media.some((f) => f.endsWith('.png'))).toBe(true);
-    const ext = [...xml.matchAll(/<wp:extent cx="(\d+)" cy="(\d+)"/g)].map((m) => [+m[1], +m[2]]);
-    expect(ext).toHaveLength(2); // la foto "mancante" viene ignorata
-    const cm = (emu: number) => emu / 360000;
-    for (const [cx] of ext) expect(cm(cx)).toBeCloseTo(8, 0);
-    expect(ext[0][1] / ext[0][0]).toBeCloseTo(120 / 160, 2);
-    expect(ext[1][1] / ext[1][0]).toBeCloseTo(90 / 60, 2);
+    const ext = [...xml.matchAll(/<wp:extent cx="(\d+)" cy="(\d+)"/g)].map((m) => [+m[1] / 360000, +m[2] / 360000]);
+    expect(ext).toHaveLength(4);
+    const [cop, uno, due, tre] = ext;
+    expect(cop[0]).toBeCloseTo(12, 0);
+    expect(uno[0]).toBeCloseTo(10, 0);
+    expect(due[0]).toBeCloseTo(8, 0);
+    expect(tre[0]).toBeCloseTo(8, 0);
+    expect(uno[1] / uno[0]).toBeCloseTo(120 / 160, 2);
+    expect(due[1] / due[0]).toBeCloseTo(90 / 60, 2);
   });
 
-  it('computo: tabella con DXA, ombreggiatura CLEAR, numeri italiani e totale', async () => {
+  it('computo: colonne DXA, ombreggiatura CLEAR, numeri italiani, prezzi vuoti lasciati vuoti', async () => {
     const { xml, testo } = await apri(esempio());
-    expect(testo).toContain('Descrizione');
-    expect(testo).toContain('Importo €');
-    expect(testo).toContain('Cartelli e segnaletica di sicurezza (74.1.A)');
-    expect(testo).toContain('1.234,50');
-    expect(testo).toContain('4.938,00'); // 4 × 1.234,50
-    expect(testo).toContain('6.538,00'); // + 2 × 800
     expect(xml).toContain('<w:tblW w:type="dxa" w:w="9638"/>');
-    expect(xml).toMatch(/<w:gridCol w:w="4838"\/>/);
-    expect(xml).toMatch(/<w:tcW w:type="dxa" w:w="\d+"\/>/);
+    expect(xml).toMatch(/<w:gridCol w:w="4638"\/>/);
     expect(xml).not.toMatch(/<w:tcW w:type="(pct|auto)"/);
     expect(xml).toMatch(/<w:shd [^>]*w:val="clear"/);
+    expect(testo).toContain('Rimozione vetrata vani scala.');
+    expect(testo).toContain('1.234,50');
+    expect(testo).toContain('2.469,00');
+    expect(testo).toContain('Fornitura e posa “alette in lamiera” per aerazione vano scala.');
   });
 
-  it('certificazioni senza duplicati', async () => {
-    const { testo } = await apri(esempio());
-    const sez3 = testo.split('3. Certificazioni e documentazioni da produrre')[1].split('4. Computo')[0];
-    expect(sez3.match(/Certificazione porte REI/g)).toHaveLength(1);
-  });
-
-  it('una sola attività: forma singolare; tabella dati solo con i campi compilati', async () => {
-    const s = sopralluogoCon(['77.1.A']);
-    s.condominio.committente = 'Condominio Alfa';
-    s.condominio.dataSopralluogo = '2026-01-02';
+  it('una sola attività: forma singolare', async () => {
+    const s = sopralluogoCon(['75.2.B']);
     const { testo } = await apri(s);
-    expect(testo).toContain("l'attività soggetta al controllo del Comando dei Vigili del Fuoco presente nel Condominio in oggetto è identificata al numero del D.P.R. 151/11:");
-    expect(testo).toContain('Committente');
-    expect(testo).toContain('02/01/2026');
-    expect(testo).not.toContain('Telefono');
-    expect(testo).not.toContain('C.F. condominio');
-    expect(testo).toContain('Non sono state rilevate prescrizioni');
+    expect(testo).toContain('l’attività soggetta al controllo del Comando dei Vigili del Fuoco presente nel Condominio in oggetto è identificata al numero del D.P.R. 151/11:');
+    expect(testo).toContain('Non sono state rilevate prescrizioni per questa attività.');
+    expect(testo).toContain('L’autorimessa oggetto di relazione');
+    expect(testo).toContain('Nessuna lavorazione prevista.');
   });
 
-  it('tipo immagine e nome file', () => {
+  it('utilità: riferimento foto, didascalia, tipo immagine, nome file', () => {
+    expect(testoConRiferimentoFoto('Testo.', [7, 8])).toBe('Testo (foto 7 – 8).');
+    expect(testoConRiferimentoFoto('Testo', [1])).toBe('Testo (foto 1).');
+    expect(testoConRiferimentoFoto('Comando dei VV.F.', [2])).toBe('Comando dei VV.F. (foto 2).');
+    expect(testoConRiferimentoFoto('Già (foto 3).', [1])).toBe('Già (foto 3).');
+    expect(didascaliaFoto([7, 8], 'Aperture')).toBe('Foto 7 – Foto 8 – Aperture.');
     expect(tipoImmagine(jpg)).toBe('jpg');
     expect(tipoImmagine(png)).toBe('png');
-    expect(tipoImmagine(new Uint8Array([1, 2, 3, 4]))).toBeNull();
-    expect(nomeFileDocx(esempio())).toBe('ROA_Condominio_Via_Verdi_12_2026-09-28.docx');
+    expect(nomeFileDocx(esempio())).toBe('ROA_Alfa_2026-09-28.docx');
   });
 });

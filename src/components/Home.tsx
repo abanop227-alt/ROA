@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { esportaBackup, importaBackup } from '../lib/backup';
-import { nuovoSopralluogo, validaCatalogo, vociVisibili } from '../lib/catalogo';
+import { migraSopralluogo, nuovoSopralluogo, titoloBreve, validaCatalogo, vociSelezionate } from '../lib/catalogo';
 import { scarica } from '../lib/condividi';
 import {
   duplicaSopralluogo,
@@ -10,6 +10,7 @@ import {
   salvaSopralluogo,
 } from '../lib/db';
 import type { Catalogo, Sopralluogo } from '../lib/types';
+import ImpostazioniTecnico from './ImpostazioniTecnico';
 import { dataItaliana, oggiISO } from '../lib/util';
 
 interface Props {
@@ -26,13 +27,16 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
   const inputBackup = useRef<HTMLInputElement>(null);
   const inputLibreria = useRef<HTMLInputElement>(null);
 
-  const ricarica = () => elencaSopralluoghi().then(setElenco).catch(() => setElenco([]));
+  const ricarica = () =>
+    elencaSopralluoghi()
+      .then((l) => setElenco(l.map((x) => migraSopralluogo(x, catalogo))))
+      .catch(() => setElenco([]));
   useEffect(() => {
     ricarica();
   }, []);
 
   async function nuovo() {
-    const s = nuovoSopralluogo(catalogo);
+    const s = nuovoSopralluogo();
     await salvaSopralluogo(s);
     onApri(s.id);
   }
@@ -41,12 +45,12 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
     setMenuAperto(null);
     const c = await duplicaSopralluogo(id);
     await ricarica();
-    if (c) setMessaggio(`Creata la copia “${c.condominio.committente}”.`);
+    if (c) setMessaggio(`Creata la copia “${titoloBreve(c) || 'sopralluogo'}”.`);
   }
 
   async function elimina(s: Sopralluogo) {
     setMenuAperto(null);
-    const nome = s.condominio.committente || 'senza nome';
+    const nome = titoloBreve(s) || 'senza nome';
     if (!confirm(`Eliminare definitivamente il sopralluogo “${nome}” con tutte le sue foto?`)) return;
     await eliminaSopralluogo(s.id);
     await ricarica();
@@ -77,7 +81,7 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
       const c = validaCatalogo(JSON.parse(await file.text()));
       await salvaCatalogoPersonalizzato(c);
       onCatalogoCambiato();
-      setMessaggio(`Libreria caricata: ${c.attivita.length} attività, ${c.voci.length} voci.`);
+      setMessaggio(`Libreria caricata: ${c.attivita.length} attività, ${c.famiglie.length} gruppi di attività.`);
     } catch (err) {
       setMessaggio(err instanceof SyntaxError ? 'Il file non è un JSON valido.' : (err as Error).message);
     }
@@ -118,19 +122,17 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
         {elenco?.length === 0 && <p className="muto">Nessun sopralluogo salvato. Inizia con “Nuovo sopralluogo”.</p>}
         <ul className="lista-sopralluoghi">
           {elenco?.map((s) => {
-            const sel = vociVisibili(s).filter((v) => v.selezionata);
+            const sel = vociSelezionate(s);
             const foto = sel.reduce((n, v) => n + v.fotoIds.length, 0);
             return (
               <li key={s.id} className="card sopralluogo">
                 <button className="sopralluogo-apri" onClick={() => onApri(s.id)}>
-                  <strong>{s.condominio.committente || 'Senza nome'}</strong>
-                  <span className="muto">
-                    {[s.condominio.indirizzo, s.condominio.comune].filter(Boolean).join(', ') || 'Indirizzo non indicato'}
-                  </span>
+                  <strong>{titoloBreve(s) || 'Nuovo sopralluogo'}</strong>
+                  <span className="muto">{s.condominio.pressoAmministrazione || 'Amministrazione non indicata'}</span>
                   <span className="meta">
                     {dataItaliana(s.condominio.dataSopralluogo)}
                     {s.attivita.length > 0 && ` · ${s.attivita.map((a) => a.codice).join(', ')}`}
-                    {` · ${sel.length} voci · ${foto} foto`}
+                    {` · ${sel.length} frasi · ${foto} foto`}
                   </span>
                 </button>
                 <button
@@ -162,9 +164,12 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
           })}
         </ul>
 
+        <ImpostazioniTecnico />
+
         <h2 className="titolo-sezione">Backup</h2>
         <p className="muto piccolo">
-          Salva tutti i sopralluoghi (foto comprese) in un file .json per passarli dal telefono al PC, o viceversa.
+          Salva tutti i sopralluoghi (foto e dati del tecnico compresi) in un file .json per passarli dal telefono al PC, o
+          viceversa.
         </p>
         <div className="riga-pulsanti">
           <button className="btn" onClick={() => esporta()} disabled={!elenco?.length}>
@@ -189,7 +194,8 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
         <h2 className="titolo-sezione">Libreria voci</h2>
         <p className="muto piccolo">
           {catalogoPersonalizzato ? 'Libreria personalizzata' : 'Libreria predefinita'}: {catalogo.attivita.length} attività,{' '}
-          {catalogo.voci.length} voci. Puoi caricare un roa-dati.json modificato per aggiungere voci e attività.
+          {catalogo.famiglie.reduce((n, f) => n + f.sezioni.reduce((m, x) => m + x.voci.length, 0), 0)} frasi tipo. Puoi
+          caricare un roa-dati.json modificato per aggiungere frasi, sezioni e attività.
         </p>
         <div className="riga-pulsanti">
           <button

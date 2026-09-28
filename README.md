@@ -19,12 +19,17 @@ Nota: service worker, installazione come app e condivisione richiedono HTTPS; co
 `npm run dev -- --host` (http://192.168.x.x) si prova il flusso, mentre installazione e uso
 offline si provano sulla versione pubblicata su GitHub Pages.
 
-## Libreria voci
+## Libreria frasi tipo
 
-`src/data/roa-dati.json` è la libreria: attività, voci, unità di misura e conclusioni.
-Per aggiungere voci o attività basta modificare il JSON (nessuna modifica al codice).
-Dall'app si può anche caricare un `roa-dati.json` modificato (Home → Libreria voci → Carica libreria),
-senza ripubblicare.
+`src/data/roa-dati.json` è la libreria. Contiene attività (classificazione D.P.R. 151/11), gruppi 74 / 75 / 77
+con regole tecniche, sezioni (es. "Vano scala", "Mezzi di estinzione"), frasi tipo con didascalia foto e
+lavorazioni di computo, certificazioni per attività, suggerimenti per cartelli e "nota bene", testi fissi.
+Le parti da completare in sopralluogo sono tra [parentesi quadre].
+
+Il JSON si genera da `scripts/libreria.py` (`python3 scripts/libreria.py`), più comodo da modificare:
+si possono aggiungere frasi, sezioni o un nuovo gruppo (es. "49" per i gruppi elettrogeni) senza toccare il codice.
+Un codice attività usa le frasi del gruppo con lo stesso numero (75.3.C → gruppo 75).
+Dall'app si può anche caricare un `roa-dati.json` modificato (Home → Libreria voci → Carica libreria).
 
 ## Struttura
 
@@ -32,8 +37,8 @@ senza ripubblicare.
 src/
   data/roa-dati.json      libreria
   lib/types.ts            modello dati
-  lib/catalogo.ts         istanziazione voci per attività, certificazioni
-  lib/computo.ts          computo metrico
+  lib/catalogo.ts         libreria, sezioni e frasi per attività, testi composti (titolo, scopo, conclusioni)
+  lib/computo.ts          computo metrico per zona (una tabella per attività)
   lib/numeri.ts           numeri in formato italiano
   lib/docx.ts             generazione del documento Word
   lib/db.ts               IndexedDB (sopralluoghi, foto come Blob, libreria)

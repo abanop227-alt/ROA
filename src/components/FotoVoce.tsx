@@ -8,9 +8,12 @@ interface Props {
   fotoIds: string[];
   onAggiunte: (ids: string[]) => void;
   onRimossa: (id: string) => void;
+  /** una sola foto (es. copertina): la nuova sostituisce la precedente */
+  singola?: boolean;
+  etichetta?: string;
 }
 
-function Miniatura({ id, onElimina }: { id: string; onElimina: () => void }) {
+export function Miniatura({ id, onElimina }: { id: string; onElimina: () => void }) {
   const [url, setUrl] = useState<string | null>(null);
   const [ingrandita, setIngrandita] = useState(false);
   useEffect(() => {
@@ -45,7 +48,7 @@ function Miniatura({ id, onElimina }: { id: string; onElimina: () => void }) {
   );
 }
 
-export default function FotoVoce({ sopralluogoId, fotoIds, onAggiunte, onRimossa }: Props) {
+export default function FotoVoce({ sopralluogoId, fotoIds, onAggiunte, onRimossa, singola, etichetta = 'Foto' }: Props) {
   const camera = useRef<HTMLInputElement>(null);
   const galleria = useRef<HTMLInputElement>(null);
   const [inCorso, setInCorso] = useState(0);
@@ -53,7 +56,7 @@ export default function FotoVoce({ sopralluogoId, fotoIds, onAggiunte, onRimossa
 
   async function aggiungi(files: FileList | null) {
     if (!files?.length) return;
-    const lista = Array.from(files);
+    const lista = Array.from(files).slice(0, singola ? 1 : undefined);
     setErrore(null);
     setInCorso(lista.length);
     const ids: string[] = [];
@@ -86,7 +89,7 @@ export default function FotoVoce({ sopralluogoId, fotoIds, onAggiunte, onRimossa
       type="file"
       accept="image/*"
       {...(conCamera ? { capture: 'environment' as const } : {})}
-      multiple
+      multiple={!singola}
       hidden
       onChange={(e) => {
         const f = e.target.files;
@@ -97,10 +100,10 @@ export default function FotoVoce({ sopralluogoId, fotoIds, onAggiunte, onRimossa
 
   return (
     <div className="foto">
-      <span className="campo-etichetta">Foto</span>
+      <span className="campo-etichetta">{etichetta}</span>
       <div className="riga-pulsanti">
         <button className="btn btn-primario btn-grande" onClick={() => camera.current?.click()} disabled={inCorso > 0}>
-          📷 Scatta foto
+          📷 {singola && fotoIds.length ? 'Sostituisci' : 'Scatta foto'}
         </button>
         <button className="btn btn-grande" onClick={() => galleria.current?.click()} disabled={inCorso > 0}>
           Galleria

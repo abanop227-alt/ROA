@@ -7,7 +7,7 @@ import { sopralluogoCon } from './aiuti';
 describe('archivio e backup', () => {
   it('salva, esporta, reimporta e duplica con le foto', async () => {
     const s = sopralluogoCon(['77.1.A']);
-    s.condominio.committente = 'Condominio Beta';
+    s.condominio.nome = 'Beta';
     s.voci[0].fotoIds = ['f-1'];
     await salvaSopralluogo(s);
     await salvaFoto({ id: 'f-1', sopralluogoId: s.id, blob: new Blob([new Uint8Array([0xff, 0xd8, 1, 2])], { type: 'image/jpeg' }), type: 'image/jpeg', width: 4, height: 3, creato: 1 });
@@ -30,7 +30,7 @@ describe('archivio e backup', () => {
 
     const copia = (await duplicaSopralluogo(s.id))!;
     expect(copia.id).not.toBe(s.id);
-    expect(copia.condominio.committente).toBe('Condominio Beta (copia)');
+    expect(copia.condominio.nome).toBe('Beta (copia)');
     const fotoCopia = await fotoDiSopralluogo(copia.id);
     expect(fotoCopia).toHaveLength(1);
     expect(copia.voci[0].fotoIds).toEqual([fotoCopia[0].id]);

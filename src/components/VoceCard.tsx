@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { contaSegnaposto, istanziaVoce } from '../lib/catalogo';
+import { useRef } from 'react';
+import { contaSegnaposto, famigliaDi } from '../lib/catalogo';
 import type { Catalogo, VoceIstanza } from '../lib/types';
 import { AreaTesto, Campo } from './Campo';
 import FotoVoce from './FotoVoce';
@@ -16,18 +16,21 @@ interface Props {
 
 export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri, onModifica, onElimina }: Props) {
   const areaTesto = useRef<HTMLTextAreaElement | null>(null);
-  const [nuovaCert, setNuovaCert] = useState('');
   const segnaposto = contaSegnaposto(voce.testo);
-  const originale = voce.voceId ? catalogo.voci.find((x) => x.id === voce.voceId) : undefined;
+  const originale = voce.voceId
+    ? famigliaDi(catalogo, voce.attivita)
+        ?.sezioni.flatMap((s) => s.voci)
+        .find((x) => x.id === voce.voceId)
+    : undefined;
   const set = <K extends keyof VoceIstanza>(k: K, val: VoceIstanza[K]) => onModifica((v) => ({ ...v, [k]: val }));
+  const lavorazioni = voce.lavorazioni.filter((l) => l.inclusa).length;
 
-  /** Seleziona la prossima parte tra [parentesi] nel testo, così si sovrascrive subito. */
+  /** Seleziona la prossima parte tra [parentesi], così si sovrascrive subito. */
   function prossimaParentesi() {
     const el = areaTesto.current;
     if (!el) return;
     const re = /\[[^\]]*\]/g;
-    const da = el.selectionEnd ?? 0;
-    re.lastIndex = da;
+    re.lastIndex = el.selectionEnd ?? 0;
     let m = re.exec(voce.testo);
     if (!m) {
       re.lastIndex = 0;
@@ -39,16 +42,8 @@ export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri
   }
 
   function ripristina() {
-    if (!originale || !voce.attivita) return;
-    if (!confirm('Sostituire il testo con quello standard della libreria?')) return;
-    set('testo', istanziaVoce(originale, voce.attivita).testo);
-  }
-
-  function aggiungiCert() {
-    const t = nuovaCert.trim();
-    if (!t) return;
-    onModifica((v) => ({ ...v, certificazioni: [...v.certificazioni, { testo: t, richiesta: true }] }));
-    setNuovaCert('');
+    if (!originale || !confirm('Sostituire il testo con quello standard della libreria?')) return;
+    onModifica((v) => ({ ...v, testo: originale.testo, didascalia: originale.didascalia }));
   }
 
   return (
@@ -59,13 +54,13 @@ export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri
           <span className="spunta-box" aria-hidden />
         </label>
         <button className="voce-titolo" onClick={onApri} aria-expanded={aperta}>
-          <strong>{voce.titolo || 'Voce senza titolo'}</strong>
-          {voce.rifNormativo && <span className="rif">{voce.rifNormativo}</span>}
+          <strong>{voce.titolo || 'Frase senza titolo'}</strong>
+          {!aperta && voce.testo && <span className="anteprima">{voce.testo}</span>}
           <span className="badges">
             {voce.personalizzata && <span className="badge">personalizzata</span>}
             {voce.selezionata && segnaposto > 0 && <span className="badge badge-avviso">{segnaposto} [ ] da completare</span>}
             {voce.fotoIds.length > 0 && <span className="badge">📷 {voce.fotoIds.length}</span>}
-            {voce.note.trim() && <span className="badge">nota</span>}
+            {voce.note.trim() && <span className="badge">appunti</span>}
           </span>
         </button>
         <span className="chevron" aria-hidden onClick={onApri}>
@@ -75,21 +70,16 @@ export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri
 
       {aperta && (
         <div className="voce-corpo">
-          {voce.personalizzata && (
-            <>
-              <Campo etichetta="Titolo" valore={voce.titolo} onValore={(v) => set('titolo', v)} />
-              <Campo etichetta="Riferimento normativo" valore={voce.rifNormativo} onValore={(v) => set('rifNormativo', v)} />
-            </>
-          )}
+          {voce.personalizzata && <Campo etichetta="Titolo (solo nell’app)" valore={voce.titolo} onValore={(v) => set('titolo', v)} />}
 
           <label className="campo">
-            <span className="campo-etichetta">Testo relazione</span>
-            <AreaTesto areaRef={areaTesto} valore={voce.testo} onValore={(v) => set('testo', v)} rows={6} />
+            <span className="campo-etichetta">Testo della relazione</span>
+            <AreaTesto areaRef={areaTesto} valore={voce.testo} onValore={(v) => set('testo', v)} rows={5} />
           </label>
           {segnaposto > 0 ? (
             <div className="promemoria">
               <span>
-                Ricorda di sostituire le parti tra <b>[parentesi]</b>: {segnaposto} rimaste.
+                Sostituisci le parti tra <b>[parentesi]</b>: {segnaposto} rimaste.
               </span>
               <button className="btn btn-piccolo" onClick={prossimaParentesi}>
                 Vai alla prossima [ ]
@@ -98,48 +88,11 @@ export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri
           ) : (
             voce.testo.trim() && <p className="ok piccolo">✓ Nessuna parte tra [parentesi] da completare.</p>
           )}
-          {originale && voce.testo !== originale.testo && (
+          {originale && (voce.testo !== originale.testo || voce.didascalia !== originale.didascalia) && (
             <button className="btn btn-piccolo btn-testo" onClick={ripristina}>
               Ripristina testo standard
             </button>
           )}
-
-          <label className="campo">
-            <span className="campo-etichetta">Note dal sopralluogo</span>
-            <AreaTesto valore={voce.note} onValore={(v) => set('note', v)} rows={2} placeholder="Annotazioni sul posto…" />
-          </label>
-
-          <fieldset className="certificazioni">
-            <legend>Certificazioni da richiedere</legend>
-            {voce.certificazioni.length === 0 && <p className="muto piccolo">Nessuna certificazione per questa voce.</p>}
-            {voce.certificazioni.map((c, i) => (
-              <label key={i} className="riga-check">
-                <input
-                  type="checkbox"
-                  checked={c.richiesta}
-                  onChange={(e) =>
-                    onModifica((v) => ({
-                      ...v,
-                      certificazioni: v.certificazioni.map((x, j) => (j === i ? { ...x, richiesta: e.target.checked } : x)),
-                    }))
-                  }
-                />
-                <span>{c.testo}</span>
-              </label>
-            ))}
-            <div className="aggiungi-riga">
-              <input
-                value={nuovaCert}
-                onChange={(e) => setNuovaCert(e.target.value)}
-                placeholder="Altra certificazione…"
-                onKeyDown={(e) => e.key === 'Enter' && aggiungiCert()}
-                aria-label="Nuova certificazione"
-              />
-              <button className="btn" onClick={aggiungiCert} disabled={!nuovaCert.trim()}>
-                Aggiungi
-              </button>
-            </div>
-          </fieldset>
 
           <FotoVoce
             sopralluogoId={sopralluogoId}
@@ -147,13 +100,27 @@ export default function VoceCard({ voce, sopralluogoId, catalogo, aperta, onApri
             onAggiunte={(ids) => onModifica((v) => ({ ...v, selezionata: true, fotoIds: [...v.fotoIds, ...ids] }))}
             onRimossa={(id) => onModifica((v) => ({ ...v, fotoIds: v.fotoIds.filter((x) => x !== id) }))}
           />
+          <Campo
+            etichetta="Didascalia foto"
+            valore={voce.didascalia}
+            onValore={(v) => set('didascalia', v)}
+            aiuto="Nel Word: “Foto 7 – Foto 8 – didascalia”, numerate in automatico"
+          />
+
+          <label className="campo">
+            <span className="campo-etichetta">Appunti (non vanno nel Word)</span>
+            <AreaTesto valore={voce.note} onValore={(v) => set('note', v)} rows={2} placeholder="Misure, promemoria…" />
+          </label>
+
+          {voce.lavorazioni.length > 0 && (
+            <p className="muto piccolo">
+              Computo: {lavorazioni} lavorazion{lavorazioni === 1 ? 'e' : 'i'} proposte (quantità e prezzi al passo 4).
+            </p>
+          )}
 
           {voce.personalizzata && (
-            <button
-              className="btn btn-pericolo btn-blocco"
-              onClick={() => confirm('Eliminare questa voce personalizzata?') && onElimina()}
-            >
-              Elimina voce
+            <button className="btn btn-pericolo btn-blocco" onClick={() => confirm('Eliminare questa frase?') && onElimina()}>
+              Elimina frase
             </button>
           )}
         </div>

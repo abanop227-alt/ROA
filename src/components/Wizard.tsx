@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { sincronizzaVoci } from '../lib/catalogo';
+import { migraSopralluogo, sincronizza, titoloBreve } from '../lib/catalogo';
 import { condividi, fileDaBlob, isMobile, puoCondividere, scarica } from '../lib/condividi';
-import { leggiFoto, leggiSopralluogo, salvaSopralluogo } from '../lib/db';
+import { leggiFoto, leggiSopralluogo, leggiTecnico, salvaSopralluogo } from '../lib/db';
 import type { Catalogo, Sopralluogo } from '../lib/types';
 import Step1Attivita from './Step1Attivita';
 import Step2Condominio from './Step2Condominio';
-import Step3Voci, { TabsAttivita, GENERALI } from './Step3Voci';
+import Step3Voci, { TabsAttivita, CARTELLI } from './Step3Voci';
 import Step4Riepilogo from './Step4Riepilogo';
 
 const PASSI = ['Attività', 'Condominio', 'Voci', 'Riepilogo'];
@@ -38,7 +38,7 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
   // ---- caricamento ----
   useEffect(() => {
     leggiSopralluogo(id)
-      .then((x) => setS(x ? sincronizzaVoci(x, catalogo) : null))
+      .then((x) => setS(x ? sincronizza(migraSopralluogo(x, catalogo), catalogo) : null))
       .catch(() => setS(null));
   }, [id, catalogo]);
 
@@ -60,7 +60,7 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
     (f: (x: Sopralluogo) => Sopralluogo) => {
       setS((prec) => {
         if (!prec) return prec;
-        const nuovo = sincronizzaVoci({ ...f(prec), modificato: Date.now() }, catalogo);
+        const nuovo = sincronizza({ ...f(prec), modificato: Date.now() }, catalogo);
         daSalvare.current = nuovo;
         return nuovo;
       });
@@ -89,7 +89,7 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
   useEffect(() => {
     if (!s) return;
     const codici = s.attivita.map((a) => a.codice);
-    if (tab !== GENERALI && !codici.includes(tab)) setTab(codici[0] ?? '');
+    if (tab !== CARTELLI && !codici.includes(tab)) setTab(codici[0] ?? '');
   }, [s, tab]);
 
   // torna in cima quando cambia passo
@@ -104,7 +104,8 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
     try {
       await salvaOra();
       const { generaDocxBlob, nomeFileDocx } = await import('../lib/docx');
-      const blob = await generaDocxBlob(s, async (fid) => {
+      const tecnico = await leggiTecnico();
+      const blob = await generaDocxBlob(s, catalogo, tecnico, async (fid) => {
         const f = await leggiFoto(fid);
         return f ? { data: new Uint8Array(await f.blob.arrayBuffer()), width: f.width, height: f.height } : null;
       });
@@ -149,7 +150,7 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
           <button className="btn-icona btn-indietro" onClick={onEsci} aria-label="Torna all'elenco">
             ‹
           </button>
-          <h1 className="titolo-sopralluogo">{s.condominio.committente || 'Nuovo sopralluogo'}</h1>
+          <h1 className="titolo-sopralluogo">{titoloBreve(s) || 'Nuovo sopralluogo'}</h1>
           <span className={`stato-salvataggio ${stato}`} aria-live="polite">
             {stato === 'salvato' ? '✓ Salvato' : stato === 'modificato' ? 'Salvataggio…' : '⚠ Non salvato'}
           </span>

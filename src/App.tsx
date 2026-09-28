@@ -29,8 +29,10 @@ export default function App() {
 
   const ricaricaCatalogo = useCallback(async () => {
     const c = await leggiCatalogoPersonalizzato().catch(() => undefined);
-    setCatalogo(c ?? catalogoPredefinito);
-    setPersonalizzato(!!c);
+    // una libreria caricata con la prima versione dell'app (senza "famiglie") non è più valida
+    const valido = c && (c as Catalogo).versione === 2 ? c : undefined;
+    setCatalogo(valido ?? catalogoPredefinito);
+    setPersonalizzato(!!valido);
   }, []);
 
   useEffect(() => {

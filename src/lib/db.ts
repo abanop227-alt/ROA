@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { Catalogo, FotoRecord, Sopralluogo } from './types';
+import type { Catalogo, FotoRecord, Sopralluogo, Tecnico } from './types';
+import { tecnicoVuoto } from './catalogo';
 import { nuovoId } from './util';
 
 interface RoaDB extends DBSchema {
@@ -76,8 +77,9 @@ export async function duplicaSopralluogo(id: string): Promise<Sopralluogo | unde
     creato: ora,
     modificato: ora,
   };
-  copia.condominio.committente = `${orig.condominio.committente || 'Sopralluogo'} (copia)`;
+  copia.condominio.nome = `${orig.condominio.nome || orig.condominio.indirizzo || 'Sopralluogo'} (copia)`;
   copia.voci = copia.voci.map((v) => ({ ...v, fotoIds: v.fotoIds.map((x) => mappa.get(x)).filter((x): x is string => !!x) }));
+  copia.fotoCopertinaId = (orig.fotoCopertinaId && mappa.get(orig.fotoCopertinaId)) || null;
   const tx = d.transaction(['sopralluoghi', 'foto'], 'readwrite');
   await tx.objectStore('sopralluoghi').put(copia);
   for (const f of copieFoto) await tx.objectStore('foto').put(f);
@@ -115,4 +117,15 @@ export async function salvaCatalogoPersonalizzato(c: Catalogo | null): Promise<v
   const d = await db();
   if (c) await d.put('impostazioni', c, CHIAVE_CATALOGO);
   else await d.delete('impostazioni', CHIAVE_CATALOGO);
+}
+
+// ---- dati del tecnico (restano solo su questo dispositivo) ----
+
+export async function leggiTecnico(): Promise<Tecnico> {
+  const t = (await (await db()).get('impostazioni', 'tecnico')) as Partial<Tecnico> | undefined;
+  return { ...tecnicoVuoto, ...(t ?? {}) };
+}
+
+export async function salvaTecnico(t: Tecnico): Promise<void> {
+  await (await db()).put('impostazioni', t, 'tecnico');
 }

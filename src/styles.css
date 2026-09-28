@@ -801,3 +801,143 @@ textarea:focus {
     padding-right: max(14px, calc((100vw - 720px) / 2 + 14px));
   }
 }
+
+/* ---------- versione 2: sezioni, cartelli, computo per zona ---------- */
+.segmentato {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 10px 0;
+  border: 2px solid var(--bordo);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.segmentato button {
+  min-height: 46px;
+  border: none;
+  background: var(--superficie);
+  font-weight: 700;
+  cursor: pointer;
+}
+.segmentato button + button {
+  border-left: 2px solid var(--bordo);
+}
+.segmentato button.attivo {
+  background: var(--testo);
+  color: var(--superficie);
+}
+.sezione {
+  margin: 18px 0 8px;
+}
+.sezione-testa {
+  display: flex;
+  align-items: center;
+}
+.sezione-titolo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 1.05rem;
+  cursor: pointer;
+  padding: 0;
+}
+.sezione-titolo strong {
+  flex: 1;
+  min-width: 0;
+}
+.chevron-sez {
+  width: 20px;
+  color: var(--muto);
+}
+.badge-ok {
+  background: var(--selezione-tenue);
+  color: var(--selezione);
+  border-color: transparent;
+}
+.anteprima {
+  font-size: 0.82rem;
+  color: var(--muto);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.suggerimenti {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+.chip-testo {
+  text-align: left;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--bordo);
+  background: var(--superficie);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.riga-cartello {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 10px;
+}
+.riga-cartello .campo {
+  flex: 1;
+  margin: 0;
+}
+.riga-cartello .campo-qta {
+  flex: 0 0 72px;
+}
+.zona-computo {
+  margin: 12px 0 24px;
+}
+.zona-titolo {
+  margin: 8px 0 4px;
+  font-size: 1.05rem;
+}
+.riga-testa {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.riga-testa textarea {
+  flex: 1;
+  min-width: 0;
+}
+.riga-num {
+  font-weight: 800;
+  min-width: 22px;
+  padding-top: 12px;
+  color: var(--muto);
+}
+.escluse {
+  margin: 6px 0;
+}
+.escluse summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.impostazioni summary,
+.certificazioni-attivita summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.titolo-passo .muto {
+  font-weight: 600;
+}

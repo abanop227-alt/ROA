@@ -1,6 +1,6 @@
 import { base64ToBytes, bytesToBase64 } from './base64';
-import { db } from './db';
-import type { FotoRecord, Sopralluogo } from './types';
+import { db, leggiTecnico, salvaTecnico } from './db';
+import type { FotoRecord, Sopralluogo, Tecnico } from './types';
 
 interface FotoBackup extends Omit<FotoRecord, 'blob'> {
   data: string; // base64
@@ -12,6 +12,7 @@ export interface Backup {
   esportato: string;
   sopralluoghi: Sopralluogo[];
   foto: FotoBackup[];
+  tecnico?: Tecnico;
 }
 
 export interface EsitoImport {
@@ -32,7 +33,8 @@ export async function creaBackup(ids?: string[]): Promise<Backup> {
       foto.push({ ...resto, data: bytesToBase64(new Uint8Array(await blob.arrayBuffer())) });
     }
   }
-  return { formato: 'roa-backup', versione: 1, esportato: new Date().toISOString(), sopralluoghi, foto };
+  const tecnico = await leggiTecnico();
+  return { formato: 'roa-backup', versione: 1, esportato: new Date().toISOString(), sopralluoghi, foto, tecnico };
 }
 
 export async function esportaBackup(ids?: string[]): Promise<Blob> {
@@ -55,6 +57,8 @@ export async function importaBackup(testo: string): Promise<EsitoImport> {
   }
   const d = await db();
   const esito: EsitoImport = { importati: 0, saltati: 0, foto: 0 };
+  // dati del tecnico: importati solo se su questo dispositivo non sono ancora stati compilati
+  if (b.tecnico && !(await leggiTecnico()).firma.trim()) await salvaTecnico({ ...(await leggiTecnico()), ...b.tecnico });
   for (const s of b.sopralluoghi) {
     if (!s?.id || !Array.isArray(s.voci)) continue;
     const presente = await d.get('sopralluoghi', s.id);
