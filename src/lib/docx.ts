@@ -1,16 +1,20 @@
+// Generazione della bozza Word con la formattazione delle ROA dello studio
+// (modello: TORRE_11D_ROA.docx): A4, Arial 12, titoli sottolineati, indice con puntini,
+// frasi a) b) c) per sezione, foto alte 7 cm, computo con griglia, piè di pagina Arial 8.
 import {
   AlignmentType,
   BorderStyle,
   Document,
   Footer,
+  Header,
   HeadingLevel,
+  HorizontalPositionRelativeFrom,
   ImageRun,
   LevelFormat,
   PageBreak,
   PageNumber,
   Packer,
   Paragraph,
-  ShadingType,
   Tab,
   TabStopType,
   Table,
@@ -18,6 +22,10 @@ import {
   TableOfContents,
   TableRow,
   TextRun,
+  TextWrappingType,
+  UnderlineType,
+  VerticalAlign,
+  VerticalPositionRelativeFrom,
   WidthType,
   type ParagraphChild,
 } from 'docx';
@@ -41,14 +49,25 @@ export interface FotoDati {
 }
 export type CaricaFoto = (id: string) => Promise<FotoDati | null>;
 
-// A4, margini 2 cm
-const PAGINA_W = 11906;
+export interface OpzioniDocumento {
+  /** immagine a pagina intera dietro al testo (carta intestata dello studio) */
+  cartaIntestata?: FotoDati | null;
+}
+
+// ---------- pagina (come il modello) ----------
+const PAGINA_W = 11906; // A4
 const PAGINA_H = 16838;
-const MARGINE = 1134;
-const LARGHEZZA_UTILE = PAGINA_W - 2 * MARGINE; // 9638 DXA
+const M_SUP = 1560; // 2,75 cm
+const M_DX = 849; // 1,5 cm
+const M_INF = 1134; // 2 cm
+const M_SX = 1134; // 2 cm
+const LARGHEZZA_UTILE = PAGINA_W - M_SX - M_DX; // 9923 DXA
 const FONT = 'Arial';
+const CORPO = 24; // 12 pt
 const PX_CM = 96 / 2.54;
-const GRIGIO = 'E7E6E6';
+const TAB_TITOLO = 709;
+
+type Allineamento = (typeof AlignmentType)[keyof typeof AlignmentType];
 
 // ---------- utilità ----------
 
@@ -86,30 +105,54 @@ function righe(testo: string): string[] {
     .filter((r) => r.trim() !== '');
 }
 
-function par(testo: string, opz: OpzRun & { after?: number; align?: (typeof AlignmentType)[keyof typeof AlignmentType] } = {}) {
-  const { after = 120, align = AlignmentType.JUSTIFIED, ...r } = opz;
-  return new Paragraph({ alignment: align, spacing: { after }, children: runs(testo, r) });
+interface OpzPar extends OpzRun {
+  after?: number;
+  before?: number;
+  align?: Allineamento;
+  left?: number;
+  keepNext?: boolean;
 }
 
-function paragrafi(testo: string, opz: OpzRun = {}): Paragraph[] {
+function par(testo: string, opz: OpzPar = {}): Paragraph {
+  const { after = 240, before = 0, align = AlignmentType.JUSTIFIED, left, keepNext, ...r } = opz;
+  return new Paragraph({
+    alignment: align,
+    spacing: { before, after },
+    indent: left ? { left } : undefined,
+    keepNext,
+    children: runs(testo, r),
+  });
+}
+
+function paragrafi(testo: string, opz: OpzPar = {}): Paragraph[] {
   return righe(testo).map((r) => par(r, opz));
 }
 
+const vuoto = (after = 0) => new Paragraph({ spacing: { after }, children: [] });
+
 function titolo(numero: string, testo: string, livello: 1 | 2 | 3 | 4): Paragraph {
   const heading = [HeadingLevel.HEADING_1, HeadingLevel.HEADING_2, HeadingLevel.HEADING_3, HeadingLevel.HEADING_4][livello - 1];
-  return new Paragraph({ heading, children: [new TextRun({ children: [numero, new Tab(), testo] })] });
+  return new Paragraph({
+    heading,
+    tabStops: [
+      { type: TabStopType.LEFT, position: TAB_TITOLO },
+      { type: TabStopType.LEFT, position: 1134 },
+    ],
+    children: [new TextRun({ children: [numero, new Tab(), testo] })],
+  });
 }
 
-function puntato(children: ParagraphChild[], livello = 0): Paragraph {
+/** Elenchi del modello (vedi numbering in creaDocumento). */
+function elenco(reference: string, children: ParagraphChild[], opz: { level?: number; instance?: number; after?: number } = {}): Paragraph {
   return new Paragraph({
-    numbering: { reference: 'elenco', level: livello },
+    numbering: { reference, level: opz.level ?? 0, ...(opz.instance !== undefined ? { instance: opz.instance } : {}) },
     alignment: AlignmentType.JUSTIFIED,
-    spacing: { after: 60 },
+    spacing: { after: opz.after ?? 0 },
     children,
   });
 }
 
-const nessunBordo = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+const nessunBordo = { style: BorderStyle.NONE, size: 0, color: 'auto' };
 const bordiNessuno = {
   top: nessunBordo,
   bottom: nessunBordo,
@@ -118,47 +161,55 @@ const bordiNessuno = {
   insideHorizontal: nessunBordo,
   insideVertical: nessunBordo,
 };
-const linea = { style: BorderStyle.SINGLE, size: 4, color: '808080' };
-const bordi = { top: linea, bottom: linea, left: linea, right: linea, insideHorizontal: linea, insideVertical: linea };
+// "Griglia tabella" di Word: linea singola 1/2 pt, colore automatico
+const linea = { style: BorderStyle.SINGLE, size: 4, color: 'auto' };
+const griglia = { top: linea, bottom: linea, left: linea, right: linea, insideHorizontal: linea, insideVertical: linea };
 
 function cella(
   contenuto: string | Paragraph[],
   width: number,
-  opz: { bold?: boolean; shade?: boolean; align?: (typeof AlignmentType)[keyof typeof AlignmentType]; columnSpan?: number } = {},
+  opz: { bold?: boolean; align?: Allineamento; columnSpan?: number; line?: number } = {},
 ): TableCell {
   return new TableCell({
     width: { size: width, type: WidthType.DXA },
     columnSpan: opz.columnSpan,
-    shading: opz.shade ? { type: ShadingType.CLEAR, color: 'auto', fill: GRIGIO } : undefined,
-    margins: { top: 60, bottom: 60, left: 100, right: 100 },
+    verticalAlign: VerticalAlign.CENTER,
     children:
       typeof contenuto === 'string'
-        ? [new Paragraph({ alignment: opz.align ?? AlignmentType.LEFT, children: runs(contenuto, { bold: opz.bold }) })]
+        ? [
+            new Paragraph({
+              alignment: opz.align ?? AlignmentType.LEFT,
+              spacing: { after: 0, ...(opz.line ? { line: opz.line } : {}) },
+              children: runs(contenuto, { bold: opz.bold }),
+            }),
+          ]
         : contenuto,
   });
 }
 
 function bloccoFirma(tecnico: Tecnico, data: string): Table {
-  const w = LARGHEZZA_UTILE / 2;
+  const w = [5462, LARGHEZZA_UTILE - 5462];
   const luogoData = `${tecnico.luogo.trim() || '[luogo]'}, ${dataItaliana(data) || '[data]'}`;
   return new Table({
     width: { size: LARGHEZZA_UTILE, type: WidthType.DXA },
-    columnWidths: [w, w],
+    columnWidths: w,
     borders: bordiNessuno,
     rows: [
       new TableRow({
         children: [
-          cella(luogoData, w),
+          cella(luogoData, w[0]),
           cella(
             [
-              new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun('Il Tecnico')] }),
-              new Paragraph({ children: [] }),
+              new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 0 }, children: [new TextRun('Il Tecnico')] }),
+              vuoto(),
+              vuoto(),
               new Paragraph({
                 alignment: AlignmentType.CENTER,
+                spacing: { after: 0 },
                 children: runs(tecnico.firma.trim() || '[firma del tecnico]', { bold: true }),
               }),
             ],
-            w,
+            w[1],
           ),
         ],
       }),
@@ -209,30 +260,41 @@ async function caricaImmagini(ids: string[], carica: CaricaFoto): Promise<Immagi
   return out;
 }
 
+/** Dimensioni in px: foto singola alta 7 cm; in coppia larga 7 cm; mai oltre i limiti indicati. */
+export function misuraFoto(f: FotoDati, inCoppia: boolean): { width: number; height: number } {
+  const r = f.height / f.width;
+  let w: number;
+  let h: number;
+  if (inCoppia) {
+    w = 7 * PX_CM;
+    h = w * r;
+    if (h > 9.5 * PX_CM) {
+      h = 9.5 * PX_CM;
+      w = h / r;
+    }
+  } else {
+    h = 7 * PX_CM;
+    w = h / r;
+    if (w > 16 * PX_CM) {
+      w = 16 * PX_CM;
+      h = w * r;
+    }
+  }
+  return { width: Math.round(w), height: Math.round(h) };
+}
+
 function bloccoFoto(immagini: Immagine[], numeri: number[], didascalia: string): Paragraph[] {
-  const larghezza = Math.round((immagini.length === 1 ? 10 : 8) * PX_CM);
   const out: Paragraph[] = [];
+  const inCoppia = immagini.length > 1;
   for (let i = 0; i < immagini.length; i += 2) {
     const children: ParagraphChild[] = [];
     immagini.slice(i, i + 2).forEach(({ f, tipo }, j) => {
-      if (j) children.push(new TextRun('   '));
-      children.push(
-        new ImageRun({
-          type: tipo,
-          data: f.data,
-          transformation: { width: larghezza, height: Math.round((larghezza * f.height) / f.width) },
-        }),
-      );
+      if (j) children.push(new TextRun('      '));
+      children.push(new ImageRun({ type: tipo, data: f.data, transformation: misuraFoto(f, inCoppia) }));
     });
-    out.push(new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, spacing: { before: 120, after: 60 }, children }));
+    out.push(new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, spacing: { before: 120, after: 120 }, children }));
   }
-  out.push(
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 240 },
-      children: runs(didascaliaFoto(numeri, didascalia), { bold: true, italics: true, size: 20 }),
-    }),
-  );
+  out.push(par(didascaliaFoto(numeri, didascalia), { bold: true, italics: true, align: AlignmentType.CENTER }));
   return out;
 }
 
@@ -240,19 +302,23 @@ function bloccoFoto(immagini: Immagine[], numeri: number[], didascalia: string):
 
 function frontespizio(s: Sopralluogo): Paragraph[] {
   const c = s.condominio;
-  const riga = (text: string) =>
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 60 }, children: runs(text, { bold: true, size: 28 }) });
   const indirizzo = [c.indirizzo.trim(), c.comune.trim()].filter(Boolean).join(' – ').toUpperCase() || '[INDIRIZZO – COMUNE]';
-  const attivita = s.attivita.length
-    ? s.attivita.map((a, i) => (i ? 'E ' : '') + righeTitolo(a))
-    : ['[ATTIVITÀ]'];
+  const attivita = s.attivita.length ? s.attivita.map((a, i) => (i ? 'E ' : '') + righeTitolo(a)) : ['[ATTIVITÀ]'];
+  const testo = [
+    'VERIFICA DELLO STATO DEI LUOGHI PER L’ADEGUAMENTO DELLO STABILE',
+    ...attivita,
+    `RELATIVAMENTE AL CONDOMINIO${c.nome.trim() ? ' ' + c.nome.trim().toUpperCase() : ''}`,
+    indirizzo,
+    'AI FINI DELLA PREVENZIONE INCENDI.',
+  ].join(' ');
+  // un unico paragrafo giustificato, Arial 20 grassetto, rientri 1,25 / 1 cm
   return [
-    riga('VERIFICA DELLO STATO DEI LUOGHI'),
-    riga('PER L’ADEGUAMENTO DELLO STABILE'),
-    ...attivita.map(riga),
-    riga(`RELATIVAMENTE AL CONDOMINIO${c.nome.trim() ? ' ' + c.nome.trim().toUpperCase() : ''}`),
-    riga(indirizzo),
-    riga('AI FINI DELLA PREVENZIONE INCENDI'),
+    new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
+      indent: { left: 709, right: 567 },
+      spacing: { after: 120, line: 240 },
+      children: runs(testo, { bold: true, size: 40 }),
+    }),
   ];
 }
 
@@ -261,12 +327,18 @@ async function copertina(s: Sopralluogo, carica: CaricaFoto): Promise<Paragraph[
   const f = await carica(s.fotoCopertinaId);
   const tipo = f && tipoImmagine(f.data);
   if (!f || !tipo) return [];
-  const w = Math.round(12 * PX_CM);
+  // fino a 14 × 18,6 cm, come nel modello
+  let w = 14 * PX_CM;
+  let h = (w * f.height) / f.width;
+  if (h > 18.6 * PX_CM) {
+    h = 18.6 * PX_CM;
+    w = (h * f.width) / f.height;
+  }
   return [
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 480 },
-      children: [new ImageRun({ type: tipo, data: f.data, transformation: { width: w, height: Math.round((w * f.height) / f.width) } })],
+      spacing: { before: 360, after: 0 },
+      children: [new ImageRun({ type: tipo, data: f.data, transformation: { width: Math.round(w), height: Math.round(h) } })],
     }),
   ];
 }
@@ -274,7 +346,11 @@ async function copertina(s: Sopralluogo, carica: CaricaFoto): Promise<Paragraph[
 function indice(): (Paragraph | TableOfContents)[] {
   return [
     new Paragraph({ children: [new PageBreak()] }),
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 240 }, children: [new TextRun({ text: 'INDICE', bold: true, size: 24 })] }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 240 },
+      children: [new TextRun({ text: 'INDICE', bold: true, size: 40 })],
+    }),
     new TableOfContents('Indice', { hyperlink: true, headingStyleRange: '1-4' }),
     new Paragraph({ children: [new PageBreak()] }),
   ];
@@ -287,7 +363,7 @@ function parteGenerale(s: Sopralluogo, tecnico: Tecnico): (Paragraph | Table)[] 
   const intest = righe(tecnico.intestazione);
   if (intest.length) intest.forEach((r) => out.push(par(r, { after: 0, align: AlignmentType.LEFT })));
   else out.push(par('[Dati del tecnico: compilali in Impostazioni tecnico nella schermata iniziale]', { after: 0 }));
-  out.push(new Paragraph({ spacing: { after: 120 }, children: [] }));
+  out.push(vuoto(240));
 
   const campi: [string, string][] = [
     ['Committente:', committente(s)],
@@ -299,33 +375,30 @@ function parteGenerale(s: Sopralluogo, tecnico: Tecnico): (Paragraph | Table)[] 
   ];
   const compilati = campi.filter(([, v]) => v && v.trim());
   if (compilati.length) {
-    const w1 = 2400;
-    const w2 = LARGHEZZA_UTILE - w1;
+    // tabella senza bordi, interlinea 1,5
+    const w1 = 1767;
+    const w2 = LARGHEZZA_UTILE - 218 - w1;
     out.push(
       new Table({
-        width: { size: LARGHEZZA_UTILE, type: WidthType.DXA },
+        width: { size: w1 + w2, type: WidthType.DXA },
+        indent: { size: 218, type: WidthType.DXA },
         columnWidths: [w1, w2],
-        borders: bordi,
-        rows: compilati.map(([k, v]) => new TableRow({ children: [cella(k, w1, { bold: true, shade: true }), cella(v.trim(), w2)] })),
+        borders: bordiNessuno,
+        rows: compilati.map(([k, v]) => new TableRow({ children: [cella(k, w1, { line: 360 }), cella(v.trim(), w2, { line: 360 })] })),
       }),
-      new Paragraph({ spacing: { after: 120 }, children: [] }),
+      vuoto(240),
     );
   }
 
-  out.push(par('Lo scopo del presente elaborato consiste in:'));
+  out.push(par('Lo scopo del presente elaborato consiste in:', { after: 120 }));
   if (!s.attivita.length) out.push(par('1) Verificare che lo stato di fatto sia conforme [riferimento] per attività: [attività]'));
   s.attivita.forEach((a, i) => {
-    out.push(par(`${i === 0 ? '1) ' : ''}Verificare che lo stato di fatto sia conforme ${riferimentoVerifica(a)} per attività:`, { after: 60 }));
-    out.push(
-      new Paragraph({
-        alignment: AlignmentType.JUSTIFIED,
-        indent: { left: 709 },
-        spacing: { after: 120 },
-        children: [new TextRun({ text: `${a.codice}: `, bold: true }), ...runs(descrizioneScopo(a).replace(/\.?$/, '.'))],
-      }),
-    );
+    out.push(par(`${i === 0 ? '1) ' : ''}Verificare che lo stato di fatto sia conforme ${riferimentoVerifica(a)} per attività:`, { after: 0 }));
+    out.push(par(`${a.codice}: ${descrizioneScopo(a).replace(/\.?$/, '.')}`, { left: 709, after: 120 }));
   });
-  out.push(par('2) Elencare le certificazioni e le documentazioni da produrre da parte dell’amministrazione dello stabile, e/o degli installatori.', { after: 240 }));
+  out.push(
+    par('2) Elencare le certificazioni e le documentazioni da produrre da parte dell’amministrazione dello stabile, e/o degli installatori.'),
+  );
 
   const plurale = s.attivita.length > 1;
   out.push(
@@ -333,21 +406,14 @@ function parteGenerale(s: Sopralluogo, tecnico: Tecnico): (Paragraph | Table)[] 
       plurale
         ? 'Dal sopralluogo è stato riscontrato che le attività soggette al controllo del Comando dei Vigili del Fuoco presente nel Condominio in oggetto sono identificate al numero del D.P.R. 151/11:'
         : 'Dal sopralluogo è stato riscontrato che l’attività soggetta al controllo del Comando dei Vigili del Fuoco presente nel Condominio in oggetto è identificata al numero del D.P.R. 151/11:',
-      { after: 60 },
+      { after: 0 },
     ),
   );
   s.attivita.forEach((a, i) => {
     const fine = i === s.attivita.length - 1 ? '.' : ';';
-    out.push(
-      new Paragraph({
-        alignment: AlignmentType.JUSTIFIED,
-        indent: { left: 709 },
-        spacing: { after: 60 },
-        children: [new TextRun({ text: `${a.codice}: `, bold: true }), ...runs((a.descrizione.trim() || '[classificazione]').replace(/[.;]?$/, fine))],
-      }),
-    );
+    out.push(par(`${a.codice}: ${(a.descrizione.trim() || '[classificazione]').replace(/[.;]?$/, fine)}`, { left: 709, after: 0 }));
   });
-  out.push(new Paragraph({ spacing: { after: 360 }, children: [] }), bloccoFirma(tecnico, c.dataRelazione));
+  out.push(vuoto(480), bloccoFirma(tecnico, c.dataRelazione));
   return out;
 }
 
@@ -359,6 +425,7 @@ async function esposizione(s: Sopralluogo, catalogo: Catalogo, carica: CaricaFot
     titolo('2.1', 'ADEGUAMENTI', 2),
   ];
   let contaFoto = 0;
+  let istanzaLettere = 0;
   const gruppi = gruppiDocumento(s);
   for (const [i, g] of gruppi.entries()) {
     const n3 = `2.1.${i + 1}`;
@@ -368,10 +435,19 @@ async function esposizione(s: Sopralluogo, catalogo: Catalogo, carica: CaricaFot
     if (!g.sezioni.length) out.push(par('Non sono state rilevate prescrizioni per questa attività.'));
     for (const [j, { sezione, voci }] of g.sezioni.entries()) {
       out.push(titolo(`${n3}.${j + 1}`, sezione.titolo.trim() || 'Sezione', 4));
+      istanzaLettere++; // a), b), c)… ripartono in ogni sezione
       for (const v of voci) {
         const immagini = await caricaImmagini(v.fotoIds, carica);
         const nf = immagini.map(() => ++contaFoto);
-        righe(testoConRiferimentoFoto(v.testo.trim() || '[testo]', nf)).forEach((riga) => out.push(par(riga)));
+        const r = righe(testoConRiferimentoFoto(v.testo.trim() || '[testo]', nf));
+        r.forEach((riga, k) => {
+          const ultima = k === r.length - 1;
+          out.push(
+            k === 0
+              ? elenco('lettere', runs(riga), { instance: istanzaLettere, after: ultima && !immagini.length ? 240 : 0 })
+              : par(riga, { left: 360, after: ultima && !immagini.length ? 240 : 0 }),
+          );
+        });
         if (immagini.length) out.push(...bloccoFoto(immagini, nf, v.didascalia));
       }
     }
@@ -381,7 +457,7 @@ async function esposizione(s: Sopralluogo, catalogo: Catalogo, carica: CaricaFot
   const cartelli = s.cartelli.filter((c) => c.descrizione.trim());
   if (cartelli.length) {
     out.push(titolo('2.2', 'ORDINE CARTELLI E SEGNALETICA DI SICUREZZA', 2));
-    for (const c of cartelli) out.push(puntato(runs(`n° ${c.quantita.trim() || '[quantità]'} ${c.descrizione.trim()}`)));
+    for (const c of cartelli) out.push(elenco('puntini', runs(`n° ${c.quantita.trim() || '[quantità]'} ${c.descrizione.trim()}`), { after: 120 }));
   }
   return out;
 }
@@ -392,18 +468,20 @@ function certificazioni(s: Sopralluogo, catalogo: Catalogo): Paragraph[] {
   let testoUsato = '';
   conCert.forEach((a, i) => {
     out.push(titolo(`3.${i + 1}`, `ATTIVITA’ “${a.codice}”`, 2));
+    // 1), 2), 3)… ripartono per ogni attività; sottopunti con la freccia ➢
     for (const c of a.certificazioni.filter((x) => x.richiesta)) {
-      out.push(puntato(runs(c.testo)));
-      c.sotto.forEach((x) => out.push(puntato(runs(x), 1)));
+      out.push(elenco('numeri', runs(c.testo), { instance: i + 1 }));
+      c.sotto.forEach((x) => out.push(elenco('frecce', runs(x))));
       testoUsato += c.testo + c.sotto.join('');
     }
+    out.push(vuoto(240));
   });
   if (!conCert.length) out.push(par('Nessuna certificazione richiesta.'));
   if (conCert.length && catalogo.testi.notaCertificazioni) out.push(par(catalogo.testi.notaCertificazioni, { italics: true }));
   // note ¹ ² ³ solo se richiamate nell'elenco
   for (const nota of catalogo.testi.noteCertificazioni) {
     const segno = nota.trim()[0];
-    if (segno && testoUsato.includes(segno)) out.push(par(nota, { size: 18 }));
+    if (segno && testoUsato.includes(segno)) out.push(par(nota, { size: 18, after: 120 }));
   }
   return out;
 }
@@ -419,27 +497,27 @@ function conclusioni(s: Sopralluogo, catalogo: Catalogo): Paragraph[] {
 function computo(s: Sopralluogo, catalogo: Catalogo, tecnico: Tecnico): (Paragraph | Table)[] {
   const out: (Paragraph | Table)[] = [titolo('5', 'COMPUTO METRICO DELLE OPERE', 1)];
   const zone = zoneComputo(s, catalogo);
-  const w = [600, 4638, 900, 900, 1300, 1300]; // somma = 9638
-  const R = AlignmentType.RIGHT;
+  const w = [436, 5234, 1044, 683, 1190, 1336]; // come il modello, somma = 9923
   const C = AlignmentType.CENTER;
+  const J = AlignmentType.JUSTIFIED;
   const qta = (t: string) => (t.trim() ? (/^[\d.,\s]+$/.test(t.trim()) ? formatQuantita(parseNumero(t)) : t.trim()) : '');
   for (const z of zone) {
-    out.push(new Paragraph({ spacing: { before: 200, after: 80 }, keepNext: true, children: [new TextRun({ text: z.etichetta, bold: true })] }));
+    out.push(par(z.etichetta, { bold: true, after: 120, before: 120, align: AlignmentType.LEFT, keepNext: true }));
     out.push(
       new Table({
         width: { size: LARGHEZZA_UTILE, type: WidthType.DXA },
         columnWidths: w,
-        borders: bordi,
+        borders: griglia,
         rows: [
           new TableRow({
             tableHeader: true,
             children: [
-              cella('', w[0], { shade: true }),
-              cella('', w[1], { shade: true }),
-              cella('U.M.', w[2], { bold: true, shade: true, align: C }),
-              cella('Q.tà', w[3], { bold: true, shade: true, align: C }),
-              cella('PREZZO', w[4], { bold: true, shade: true, align: C }),
-              cella('IMPORTO', w[5], { bold: true, shade: true, align: C }),
+              cella('', w[0]),
+              cella('', w[1]),
+              cella('U.M.', w[2], { bold: true, align: C }),
+              cella('Q.tà', w[3], { bold: true, align: C }),
+              cella('PREZZO', w[4], { bold: true, align: C }),
+              cella('IMPORTO', w[5], { bold: true, align: C }),
             ],
           }),
           ...z.righe.map(
@@ -447,47 +525,48 @@ function computo(s: Sopralluogo, catalogo: Catalogo, tecnico: Tecnico): (Paragra
               new TableRow({
                 children: [
                   cella(String(i + 1), w[0], { align: C }),
-                  cella(r.descrizione, w[1]),
+                  cella(r.descrizione, w[1], { align: J }),
                   cella(r.um, w[2], { align: C }),
                   cella(qta(r.quantitaTesto), w[3], { align: C }),
-                  cella(r.prezzoTesto.trim() ? formatNumero(r.prezzo) : '', w[4], { align: R }),
-                  cella(r.importo === null ? '' : formatNumero(r.importo), w[5], { align: R }),
+                  cella(r.prezzoTesto.trim() ? formatNumero(r.prezzo) : '', w[4], { align: C }),
+                  cella(r.importo === null ? '' : formatNumero(r.importo), w[5], { align: C }),
                 ],
               }),
           ),
           new TableRow({
             children: [
-              cella('TOTALE', w[0] + w[1] + w[2] + w[3] + w[4], { bold: true, shade: true, columnSpan: 5, align: R }),
-              cella(z.conPrezzi ? formatNumero(z.totale) : '', w[5], { bold: true, shade: true, align: R }),
+              cella('TOTALE', w[0] + w[1] + w[2] + w[3] + w[4], { bold: true, columnSpan: 5 }),
+              cella(z.conPrezzi ? formatNumero(z.totale) : '', w[5], { bold: true, align: C }),
             ],
           }),
         ],
       }),
+      vuoto(240),
     );
   }
   if (!zone.length) out.push(par('Nessuna lavorazione prevista.'));
   if (zone.length > 1 && zone.some((z) => z.conPrezzi)) {
-    out.push(par(`TOTALE COMPLESSIVO: € ${formatNumero(totaleComplessivo(zone))}`, { bold: true, align: R, after: 240 }));
+    out.push(par(`TOTALE COMPLESSIVO: € ${formatNumero(totaleComplessivo(zone))}`, { bold: true, align: AlignmentType.RIGHT }));
   }
   if (s.notaBene.trim()) {
-    out.push(par('Nota bene:', { bold: true, after: 60 }), ...paragrafi(s.notaBene));
+    out.push(par('Nota bene:', { bold: true, after: 0 }), ...paragrafi(s.notaBene, { bold: true }));
   }
-  out.push(new Paragraph({ spacing: { after: 240 }, children: [] }), ...paragrafi(catalogo.testi.chiusura));
-  out.push(new Paragraph({ spacing: { after: 240 }, children: [] }), bloccoFirma(tecnico, s.condominio.dataRelazione));
+  out.push(...paragrafi(catalogo.testi.chiusura));
+  out.push(vuoto(240), bloccoFirma(tecnico, s.condominio.dataRelazione));
   return out;
 }
 
 function piede(s: Sopralluogo, tecnico: Tecnico): Footer {
   const sx = [tecnico.societa.trim(), s.condominio.commessa.trim() && `n°${s.condominio.commessa.trim()}`].filter(Boolean).join(' ');
-  const dx = [tecnico.iniziali.trim(), tecnico.revisione.trim(), dataItaliana(s.condominio.dataRelazione)].filter(Boolean).join('    ');
+  const dx = [tecnico.iniziali.trim(), tecnico.revisione.trim(), dataItaliana(s.condominio.dataRelazione)].filter(Boolean).join('      ');
   return new Footer({
     children: [
       new Paragraph({
         tabStops: [
-          { type: TabStopType.CENTER, position: LARGHEZZA_UTILE / 2 },
+          { type: TabStopType.CENTER, position: Math.round(LARGHEZZA_UTILE / 2) },
           { type: TabStopType.RIGHT, position: LARGHEZZA_UTILE },
         ],
-        border: { top: { style: BorderStyle.SINGLE, size: 4, color: '808080', space: 4 } },
+        spacing: { after: 0, line: 240 },
         children: [
           new TextRun({ children: [sx, new Tab(), 'Pagina ', PageNumber.CURRENT, ' di ', PageNumber.TOTAL_PAGES, new Tab(), dx], size: 16 }),
         ],
@@ -496,9 +575,42 @@ function piede(s: Sopralluogo, tecnico: Tecnico): Footer {
   });
 }
 
+/** Carta intestata: immagine a tutta pagina, dietro al testo, ripetuta su ogni pagina. */
+function intestazione(carta: FotoDati | null | undefined): Header | undefined {
+  const tipo = carta && tipoImmagine(carta.data);
+  if (!carta || !tipo) return undefined;
+  return new Header({
+    children: [
+      new Paragraph({
+        spacing: { after: 0 },
+        children: [
+          new ImageRun({
+            type: tipo,
+            data: carta.data,
+            transformation: { width: Math.round(21 * PX_CM), height: Math.round(29.7 * PX_CM) },
+            floating: {
+              horizontalPosition: { relative: HorizontalPositionRelativeFrom.PAGE, offset: 0 },
+              verticalPosition: { relative: VerticalPositionRelativeFrom.PAGE, offset: 0 },
+              behindDocument: true,
+              allowOverlap: true,
+              wrap: { type: TextWrappingType.NONE },
+            },
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
 // ---------- documento ----------
 
-export async function creaDocumento(s: Sopralluogo, catalogo: Catalogo, tecnico: Tecnico, carica: CaricaFoto): Promise<Document> {
+export async function creaDocumento(
+  s: Sopralluogo,
+  catalogo: Catalogo,
+  tecnico: Tecnico,
+  carica: CaricaFoto,
+  opz: OpzioniDocumento = {},
+): Promise<Document> {
   const children = [
     ...frontespizio(s),
     ...(await copertina(s, carica)),
@@ -510,36 +622,103 @@ export async function creaDocumento(s: Sopralluogo, catalogo: Catalogo, tecnico:
     ...computo(s, catalogo, tecnico),
   ];
 
-  const heading = (id: string, name: string, size: number, level: number, italics = false) => ({
+  // Titoli come nel modello: Arial 12; capitoli in grassetto sottolineato, attività sottolineate,
+  // sezioni in corsivo. Interlinea 1,2.
+  const heading = (id: string, name: string, level: number, run: { bold?: boolean; italics?: boolean; underline?: boolean }) => ({
     id,
     name,
     basedOn: 'Normal',
     next: 'Normal',
     quickFormat: true,
-    run: { font: FONT, size, bold: !italics, italics, color: '000000' },
-    paragraph: { spacing: { before: level === 0 ? 360 : 240, after: 120 }, keepNext: true, keepLines: true, outlineLevel: level },
+    run: {
+      font: FONT,
+      size: CORPO,
+      bold: !!run.bold,
+      italics: !!run.italics,
+      color: '000000',
+      ...(run.underline ? { underline: { type: UnderlineType.SINGLE } } : {}),
+    },
+    paragraph: { spacing: { before: 240, after: 240, line: 288 }, keepNext: true, keepLines: true, outlineLevel: level },
   });
+
+  // Indice: voce principale Arial 12 grassetto maiuscolo, puntini fino al numero di pagina
+  const toc = (id: string, name: string, bold: boolean) => ({
+    id,
+    name,
+    basedOn: 'Normal',
+    next: 'Normal',
+    run: { font: FONT, size: CORPO, bold, allCaps: bold },
+    paragraph: {
+      spacing: { before: bold ? 360 : 120, after: 0, line: 240 },
+      indent: { left: 142 },
+      tabStops: [
+        { type: TabStopType.LEFT, position: bold ? 851 : 1200 },
+        { type: TabStopType.RIGHT, position: 9628, leader: 'dot' as const },
+      ],
+    },
+  });
+
+  const header = intestazione(opz.cartaIntestata);
 
   return new Document({
     creator: tecnico.firma || 'ROA Antincendio',
     title: `ROA ${committente(s)}`.trim(),
     features: { updateFields: true },
     styles: {
-      default: { document: { run: { font: FONT, size: 22 }, paragraph: { spacing: { line: 276 } } } },
+      default: {
+        document: { run: { font: FONT, size: CORPO }, paragraph: { spacing: { after: 0, line: 276 } } },
+      },
       paragraphStyles: [
-        heading('Heading1', 'Heading 1', 24, 0),
-        heading('Heading2', 'Heading 2', 22, 1),
-        heading('Heading3', 'Heading 3', 22, 2),
-        heading('Heading4', 'Heading 4', 22, 3, true),
+        heading('Heading1', 'Heading 1', 0, { bold: true, underline: true }),
+        heading('Heading2', 'Heading 2', 1, { bold: true, underline: true }),
+        heading('Heading3', 'Heading 3', 2, { underline: true }),
+        heading('Heading4', 'Heading 4', 3, { italics: true }),
+        toc('TOC1', 'toc 1', true),
+        toc('TOC2', 'toc 2', false),
+        toc('TOC3', 'toc 3', false),
+        toc('TOC4', 'toc 4', false),
       ],
     },
     numbering: {
       config: [
         {
-          reference: 'elenco',
+          // frasi di ogni sezione: a) b) c)
+          reference: 'lettere',
           levels: [
-            { level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } },
-            { level: 1, format: LevelFormat.BULLET, text: '–', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 1440, hanging: 360 } } } },
+            { level: 0, format: LevelFormat.LOWER_LETTER, text: '%1)', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 360, hanging: 360 } } } },
+          ],
+        },
+        {
+          // certificazioni: 1) 2) 3)
+          reference: 'numeri',
+          levels: [
+            { level: 0, format: LevelFormat.DECIMAL, text: '%1)', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } },
+          ],
+        },
+        {
+          // sottopunti delle certificazioni: freccia ➢ (Wingdings)
+          reference: 'frecce',
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: '',
+              alignment: AlignmentType.LEFT,
+              style: { paragraph: { indent: { left: 2149, hanging: 360 } }, run: { font: 'Wingdings' } },
+            },
+          ],
+        },
+        {
+          // cartelli
+          reference: 'puntini',
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: '',
+              alignment: AlignmentType.LEFT,
+              style: { paragraph: { indent: { left: 501, hanging: 360 } }, run: { font: 'Wingdings' } },
+            },
           ],
         },
       ],
@@ -549,9 +728,10 @@ export async function creaDocumento(s: Sopralluogo, catalogo: Catalogo, tecnico:
         properties: {
           page: {
             size: { width: PAGINA_W, height: PAGINA_H },
-            margin: { top: MARGINE, right: MARGINE, bottom: MARGINE, left: MARGINE },
+            margin: { top: M_SUP, right: M_DX, bottom: M_INF, left: M_SX, header: 0, footer: 708 },
           },
         },
+        ...(header ? { headers: { default: header } } : {}),
         footers: { default: piede(s, tecnico) },
         children,
       },
@@ -559,8 +739,14 @@ export async function creaDocumento(s: Sopralluogo, catalogo: Catalogo, tecnico:
   });
 }
 
-export async function generaDocxBlob(s: Sopralluogo, catalogo: Catalogo, tecnico: Tecnico, carica: CaricaFoto): Promise<Blob> {
-  return Packer.toBlob(await creaDocumento(s, catalogo, tecnico, carica));
+export async function generaDocxBlob(
+  s: Sopralluogo,
+  catalogo: Catalogo,
+  tecnico: Tecnico,
+  carica: CaricaFoto,
+  opz: OpzioniDocumento = {},
+): Promise<Blob> {
+  return Packer.toBlob(await creaDocumento(s, catalogo, tecnico, carica, opz));
 }
 
 export function nomeFileDocx(s: Sopralluogo): string {

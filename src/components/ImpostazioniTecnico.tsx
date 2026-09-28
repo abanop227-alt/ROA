@@ -1,8 +1,80 @@
 import { useEffect, useRef, useState } from 'react';
 import { tecnicoVuoto } from '../lib/catalogo';
-import { leggiTecnico, salvaTecnico } from '../lib/db';
+import { leggiCartaIntestata, leggiTecnico, salvaCartaIntestata, salvaTecnico } from '../lib/db';
+import { ridimensionaFoto } from '../lib/foto';
 import type { Tecnico } from '../lib/types';
 import { AreaTesto, Campo } from './Campo';
+
+/** Carta intestata dello studio: immagine a pagina intera messa dietro al testo del Word. */
+function CartaIntestata() {
+  const [url, setUrl] = useState<string | null>(null);
+  const [errore, setErrore] = useState<string | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+
+  async function carica() {
+    const c = await leggiCartaIntestata().catch(() => undefined);
+    setUrl((vecchio) => {
+      if (vecchio) URL.revokeObjectURL(vecchio);
+      return c ? URL.createObjectURL(c.blob) : null;
+    });
+  }
+
+  useEffect(() => {
+    carica();
+  }, []);
+
+  async function scegli(file: File | undefined) {
+    if (!file) return;
+    setErrore(null);
+    try {
+      const r = await ridimensionaFoto(file, 2400);
+      await salvaCartaIntestata({ blob: r.blob, width: r.width, height: r.height });
+      await carica();
+    } catch {
+      setErrore('Immagine non leggibile: usa un file JPG o PNG.');
+    }
+  }
+
+  return (
+    <div className="carta-intestata">
+      <span className="campo-etichetta">Carta intestata (facoltativa)</span>
+      <p className="muto piccolo">
+        Immagine della pagina intestata dello studio (A4 verticale, logo e dati): viene messa dietro al testo di ogni
+        pagina. Da Word: apri l’intestazione del tuo modello, clic destro sull’immagine → “Salva come immagine”.
+      </p>
+      {url && <img src={url} alt="Carta intestata" className="anteprima-carta" />}
+      <div className="riga-pulsanti">
+        <button className="btn" onClick={() => input.current?.click()}>
+          {url ? 'Sostituisci' : 'Carica immagine'}
+        </button>
+        {url && (
+          <button
+            className="btn btn-pericolo"
+            onClick={async () => {
+              if (!confirm('Togliere la carta intestata?')) return;
+              await salvaCartaIntestata(null);
+              await carica();
+            }}
+          >
+            Togli
+          </button>
+        )}
+      </div>
+      {errore && <p className="errore">{errore}</p>}
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = '';
+          scegli(f);
+        }}
+      />
+    </div>
+  );
+}
 
 /** Dati del tecnico per intestazione, firma e piè di pagina. Restano solo su questo dispositivo. */
 export default function ImpostazioniTecnico() {
@@ -55,6 +127,7 @@ export default function ImpostazioniTecnico() {
         <Campo etichetta="Iniziali redattore" valore={t.iniziali} onValore={(v) => set('iniziali', v)} placeholder="es. F.D." />
         <Campo etichetta="Revisione" valore={t.revisione} onValore={(v) => set('revisione', v)} />
       </div>
+      <CartaIntestata />
     </details>
   );
 }

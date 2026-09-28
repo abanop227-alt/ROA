@@ -141,14 +141,28 @@ describe('generazione del .docx', () => {
     expect(testo).not.toContain('Centrale termica:');
   });
 
-  it('stili Heading 1-4, indice automatico, A4, Arial 11, piè di pagina', async () => {
+  it('formato del modello: A4 con i suoi margini, Arial 12, titoli, indice, piè di pagina Arial 8', async () => {
     const { zip, xml } = await apri(esempio());
     for (const h of ['Heading1', 'Heading2', 'Heading3', 'Heading4']) expect(xml).toContain(`w:val="${h}"`);
     expect(xml).toMatch(/TOC \\h \\o &quot;1-4&quot;/);
     expect(xml).toMatch(/<w:pgSz[^>]*w:w="11906"[^>]*w:h="16838"/);
+    for (const [k, v] of Object.entries({ top: 1560, right: 849, bottom: 1134, left: 1134, header: 0, footer: 708 })) {
+      expect(xml).toMatch(new RegExp(`<w:pgMar[^>]*w:${k}="${v}"`));
+    }
+    // frontespizio: un paragrafo Arial 20 grassetto
+    expect(xml).toMatch(/<w:b\/><w:bCs\/><w:sz w:val="40"\/>[\s\S]*?VERIFICA DELLO STATO DEI LUOGHI PER L’ADEGUAMENTO DELLO STABILE AL PROGETTO/);
     const stili = await zip.file('word/styles.xml')!.async('string');
     expect(stili).toContain('Arial');
-    expect(stili).toMatch(/<w:docDefaults>[\s\S]*<w:sz w:val="22"\/>/);
+    expect(stili).toMatch(/<w:docDefaults>[\s\S]*<w:sz w:val="24"\/>/);
+    // Titolo 1 grassetto sottolineato, Titolo 4 corsivo, indice con puntini
+    expect(stili).toMatch(/w:styleId="Heading1"[\s\S]*?<w:b\/>[\s\S]*?<w:u w:val="single"\/>[\s\S]*?<\/w:style>/);
+    expect(stili).toMatch(/w:styleId="Heading4"[\s\S]*?<w:i\/>[\s\S]*?<\/w:style>/);
+    expect(stili).toMatch(/w:styleId="TOC1"[\s\S]*?w:leader="dot"[\s\S]*?<w:caps\/>[\s\S]*?<\/w:style>/);
+    // frasi a) b) c) e certificazioni 1) 2) 3), sottopunti con freccia Wingdings
+    const num = await zip.file('word/numbering.xml')!.async('string');
+    expect(num).toContain('w:val="lowerLetter"');
+    expect(num).toMatch(/w:val="decimal"[\s\S]*?w:val="%1\)"/);
+    expect(num).toContain('Wingdings');
     const settings = await zip.file('word/settings.xml')!.async('string');
     expect(settings).toContain('updateFields');
     const piede = Object.keys(zip.files).find((f) => /word\/footer\d*\.xml/.test(f))!;
@@ -157,9 +171,10 @@ describe('generazione del .docx', () => {
     expect(xmlPiede).toContain('Pagina ');
     expect(xmlPiede).toContain('M.R.');
     expect(xmlPiede).toContain('28/09/2026');
+    expect(xmlPiede).toContain('<w:sz w:val="16"/>');
   });
 
-  it('foto: copertina + 3 foto (jpg e png), a coppie da 8 cm, singola da 10 cm, proporzioni mantenute', async () => {
+  it('foto: copertina fino a 14 cm, singola alta 7 cm, in coppia larghe 7 cm, proporzioni mantenute', async () => {
     const { zip, xml } = await apri(esempio());
     const media = Object.keys(zip.files).filter((f) => f.startsWith('word/media/'));
     expect(media.some((f) => /\.jpe?g$/.test(f))).toBe(true);
@@ -167,20 +182,38 @@ describe('generazione del .docx', () => {
     const ext = [...xml.matchAll(/<wp:extent cx="(\d+)" cy="(\d+)"/g)].map((m) => [+m[1] / 360000, +m[2] / 360000]);
     expect(ext).toHaveLength(4);
     const [cop, uno, due, tre] = ext;
-    expect(cop[0]).toBeCloseTo(12, 0);
-    expect(uno[0]).toBeCloseTo(10, 0);
-    expect(due[0]).toBeCloseTo(8, 0);
-    expect(tre[0]).toBeCloseTo(8, 0);
+    expect(cop[0]).toBeCloseTo(14, 0);
+    expect(uno[1]).toBeCloseTo(7, 1);
+    expect(due[0]).toBeCloseTo(6.33, 1); // verticale 60×90: limitata a 9,5 cm di altezza
+    expect(due[1]).toBeCloseTo(9.5, 1);
+    expect(tre[0]).toBeCloseTo(7, 1);
     expect(uno[1] / uno[0]).toBeCloseTo(120 / 160, 2);
     expect(due[1] / due[0]).toBeCloseTo(90 / 60, 2);
   });
 
-  it('computo: colonne DXA, ombreggiatura CLEAR, numeri italiani, prezzi vuoti lasciati vuoti', async () => {
+  it('carta intestata: immagine a pagina intera dietro al testo nell’intestazione', async () => {
+    const buf = await Packer.toBuffer(
+      await creaDocumento(esempio(), cat, tecnico, carica, { cartaIntestata: { data: jpg, width: 160, height: 226 } }),
+    );
+    const zip = await JSZip.loadAsync(buf);
+    const nome = Object.keys(zip.files).find((f) => /word\/header\d*\.xml/.test(f))!;
+    const h = await zip.file(nome)!.async('string');
+    expect(h).toContain('behindDoc="1"');
+    expect(h).toMatch(/<wp:positionH relativeFrom="page">/);
+    const [cx, cy] = [...h.matchAll(/<wp:extent cx="(\d+)" cy="(\d+)"/g)].map((m) => [+m[1] / 360000, +m[2] / 360000])[0];
+    expect(cx).toBeCloseTo(21, 0);
+    expect(cy).toBeCloseTo(29.7, 0);
+    // senza carta intestata nessuna intestazione
+    const { zip: z2 } = await apri(esempio());
+    expect(Object.keys(z2.files).some((f) => /word\/header\d*\.xml/.test(f))).toBe(false);
+  });
+
+  it('computo: griglia come il modello (colonne DXA), numeri italiani, prezzi vuoti lasciati vuoti', async () => {
     const { xml, testo } = await apri(esempio());
-    expect(xml).toContain('<w:tblW w:type="dxa" w:w="9638"/>');
-    expect(xml).toMatch(/<w:gridCol w:w="4638"\/>/);
+    expect(xml).toContain('<w:tblW w:type="dxa" w:w="9923"/>');
+    for (const c of [436, 5234, 1044, 683, 1190, 1336]) expect(xml).toMatch(new RegExp(`<w:gridCol w:w="${c}"/>`));
     expect(xml).not.toMatch(/<w:tcW w:type="(pct|auto)"/);
-    expect(xml).toMatch(/<w:shd [^>]*w:val="clear"/);
+    expect(xml).not.toMatch(/<w:shd /);
     expect(testo).toContain('Rimozione vetrata vani scala.');
     expect(testo).toContain('1.234,50');
     expect(testo).toContain('2.469,00');

@@ -129,3 +129,21 @@ export async function leggiTecnico(): Promise<Tecnico> {
 export async function salvaTecnico(t: Tecnico): Promise<void> {
   await (await db()).put('impostazioni', t, 'tecnico');
 }
+
+// ---- carta intestata (immagine a pagina intera, solo su questo dispositivo) ----
+
+export interface CartaIntestata {
+  blob: Blob;
+  width: number;
+  height: number;
+}
+
+export async function leggiCartaIntestata(): Promise<CartaIntestata | undefined> {
+  return (await (await db()).get('impostazioni', 'cartaIntestata')) as CartaIntestata | undefined;
+}
+
+export async function salvaCartaIntestata(c: CartaIntestata | null): Promise<void> {
+  const d = await db();
+  if (c) await d.put('impostazioni', c, 'cartaIntestata');
+  else await d.delete('impostazioni', 'cartaIntestata');
+}

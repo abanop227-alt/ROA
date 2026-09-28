@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { migraSopralluogo, sincronizza, titoloBreve } from '../lib/catalogo';
 import { condividi, fileDaBlob, isMobile, puoCondividere, scarica } from '../lib/condividi';
-import { leggiFoto, leggiSopralluogo, leggiTecnico, salvaSopralluogo } from '../lib/db';
+import { leggiCartaIntestata, leggiFoto, leggiSopralluogo, leggiTecnico, salvaSopralluogo } from '../lib/db';
 import type { Catalogo, Sopralluogo } from '../lib/types';
 import Step1Attivita from './Step1Attivita';
 import Step2Condominio from './Step2Condominio';
@@ -105,10 +105,20 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
       await salvaOra();
       const { generaDocxBlob, nomeFileDocx } = await import('../lib/docx');
       const tecnico = await leggiTecnico();
-      const blob = await generaDocxBlob(s, catalogo, tecnico, async (fid) => {
-        const f = await leggiFoto(fid);
-        return f ? { data: new Uint8Array(await f.blob.arrayBuffer()), width: f.width, height: f.height } : null;
-      });
+      const carta = await leggiCartaIntestata().catch(() => undefined);
+      const cartaIntestata = carta
+        ? { data: new Uint8Array(await carta.blob.arrayBuffer()), width: carta.width, height: carta.height }
+        : null;
+      const blob = await generaDocxBlob(
+        s,
+        catalogo,
+        tecnico,
+        async (fid) => {
+          const f = await leggiFoto(fid);
+          return f ? { data: new Uint8Array(await f.blob.arrayBuffer()), width: f.width, height: f.height } : null;
+        },
+        { cartaIntestata },
+      );
       const file = fileDaBlob(blob, nomeFileDocx(s));
       const condivisibile = isMobile() && puoCondividere(file);
       setDoc({ file, condivisibile });

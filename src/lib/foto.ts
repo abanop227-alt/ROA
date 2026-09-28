@@ -31,10 +31,10 @@ async function decodifica(file: Blob): Promise<{ img: CanvasImageSource; w: numb
 }
 
 /** Ridimensiona lato client (lato lungo max 1600 px) e ricomprime in JPEG ~0,8. */
-export async function ridimensionaFoto(file: Blob): Promise<FotoRidotta> {
+export async function ridimensionaFoto(file: Blob, latoMax = LATO_MAX): Promise<FotoRidotta> {
   const { img, w, h, chiudi } = await decodifica(file);
   try {
-    const k = Math.min(1, LATO_MAX / Math.max(w, h));
+    const k = Math.min(1, latoMax / Math.max(w, h));
     const width = Math.max(1, Math.round(w * k));
     const height = Math.max(1, Math.round(h * k));
     const canvas = document.createElement('canvas');

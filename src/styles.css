@@ -941,3 +941,20 @@ textarea:focus {
 .titolo-passo .muto {
   font-weight: 600;
 }
+.carta-intestata {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.carta-intestata p {
+  margin: 0;
+}
+.anteprima-carta {
+  width: 120px;
+  aspect-ratio: 210 / 297;
+  object-fit: cover;
+  border: 1px solid var(--bordo);
+  border-radius: 6px;
+  background: #fff;
+}
