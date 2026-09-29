@@ -3,7 +3,7 @@ import { programmaSync, statoSync, type StatoAutoSync } from '../lib/autosync';
 import { leggiConfigSync, salvaConfigSync, verificaConfig, type ConfigSync } from '../lib/sync';
 import { Campo } from './Campo';
 
-const REPO_PREDEFINITO = 'abanop227-alt/ROA-dati';
+const REPO_PREDEFINITO = 'abanop227-alt/ROA---dati';
 
 function ora(t: number): string {
   return new Date(t).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
