@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { tecnicoVuoto } from '../src/lib/catalogo';
-import { compilaModello, dividiIndirizzo, moduliPredefiniti, nomeFileModulo, professionistaVuoto, valoriPin3, valoriPin31 } from '../src/lib/moduliVvf';
+import { compilaModello, dividiCodice, dividiIndirizzo, moduliPredefiniti, nomeFileModulo, professionistaVuoto, valoriPin2, valoriPin21, valoriPin3, valoriPin31 } from '../src/lib/moduliVvf';
 import type { Tecnico } from '../src/lib/types';
 import { sopralluogoCon } from './aiuti';
 
@@ -112,10 +112,42 @@ describe('MOD. PIN 3.1 – asseverazione per rinnovo', () => {
   });
 });
 
+describe('MOD. PIN 2 e 2.1 – SCIA', () => {
+  it('divide il codice attività', () => {
+    expect(dividiCodice('77.1.A')).toEqual({ n: '77', sotto: '1', cat: 'A' });
+    expect(dividiCodice('')).toEqual({ n: '', sotto: '', cat: '' });
+  });
+
+  it('MOD. PIN 2: titolare, attività, classi, fascicolo e professionista', async () => {
+    const { s, d } = esempio();
+    s.pratica!.tipo = 'scia';
+    const { testo, xml } = await testi(await compilaModello(modello('pin2-scia.docx'), valoriPin2(s, d, tecnico)));
+    for (const atteso of ['309845', 'BIANCHI', 'LUCA', 'VIA VERDI', 'EDIFICIO DI CIVILE ABITAZIONE', 'VIA AOSTA', '20155', 'ROSSI', 'MARIO', 'VIA ROMA', 'studio@example.it', 'LUCA BIANCHI', '250,00']) {
+      expect(testo, atteso).toContain(atteso);
+    }
+    // classi: 77 1 A e 74 1 A nelle prime due righe
+    expect(testo).toMatch(/\n77\n1\nA\n[\s\S]*\n74\n1\nA\n/);
+    expect(xml).not.toContain('{{');
+    expect(xml.match(/<w:default(?! w:val="[01]")/g)).toBeNull();
+  });
+
+  it('MOD. PIN 2.1: professionista e attività', async () => {
+    const { s, d } = esempio();
+    const { testo, xml } = await testi(await compilaModello(modello('pin21-asseverazione-scia.docx'), valoriPin21(s, d, tecnico)));
+    for (const atteso of ['309845', 'GEOM.', 'ROSSI', 'MARIO', 'COLLEGIO GEOMETRI MILANO', '1234', 'VIA ROMA', 'studio@pec.example.it', 'EDIFICIO DI CIVILE ABITAZIONE', 'VIA AOSTA']) {
+      expect(testo, atteso).toContain(atteso);
+    }
+    expect(xml).not.toContain('{{');
+    expect(xml.match(/<w:default(?! w:val="[01]")/g)).toBeNull();
+  });
+});
+
 describe('nome del file', () => {
   it('segue la convenzione dell’archivio', () => {
     const { s } = esempio();
     expect(nomeFileModulo('pin3', s)).toBe('01_Via Aosta, 21_MOD. PIN 3 - 2023_RINNOVO PERIODICO.docx');
     expect(nomeFileModulo('pin31', s)).toBe('02_Via Aosta, 21_MOD. PIN 3.1 - 2014_ASSEVERAZIONE PER RINNOVO.docx');
+    expect(nomeFileModulo('pin2', s)).toBe('01_Via Aosta, 21_MOD. PIN 2 - 2023_SCIA.docx');
+    expect(nomeFileModulo('pin21', s)).toBe('02_Via Aosta, 21_MOD. PIN 2.1 - 2018_ASSEVERAZIONE.docx');
   });
 });

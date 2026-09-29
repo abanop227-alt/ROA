@@ -119,6 +119,8 @@ class Modulo:
     def codice_fiscale(self, etichetta='codice fiscale della persona fisica', n=0):
         ets = self.etichette(etichetta)
         cand = [c for c in self.sopra(ets[n].getparent()) if ctext(c) != 'C.F.']
+        if len(cand) == 17 and ctext(cand[0]) == '':
+            cand = cand[1:]  # prima cella = etichetta "C.F." senza testo
         assert len(cand) == 16, f'codice fiscale: {len(cand)} caselle invece di 16'
         for k, c in enumerate(cand):
             self._token(c.find('.//w:p', NS), f'cf{k}')
@@ -133,6 +135,29 @@ class Modulo:
                 self._token(self.par[j], chiave)
                 return
         raise AssertionError(f'nessun riquadro dopo {testo_riga!r}')
+
+    def par_idx(self, idx, chiave, etichetta=None, idx_etichetta=None):
+        """Riquadro vuoto in una posizione nota (per le tabelle con celle non allineate alle etichette).
+        Controlla che il paragrafo sia vuoto e, se indicata, che l'etichetta stia nel paragrafo `idx_etichetta`."""
+        assert ptext(self.par[idx]) == '', f'paragrafo {idx}: non vuoto ({ptext(self.par[idx])!r})'
+        if etichetta is not None:
+            assert ptext(self.par[idx_etichetta]) == etichetta, f'paragrafo {idx_etichetta}: atteso {etichetta!r}, trovato {ptext(self.par[idx_etichetta])!r}'
+        self._token(self.par[idx], chiave)
+
+    def righe_attivita(self, inizia_etichetta, n_righe):
+        """Tabella "attività individuate ai n./sottoclasse/cat.": per ogni riga tre riquadri (n., sottoclasse, categoria)."""
+        lab = [p for p in self.par if ptext(p).startswith(inizia_etichetta)]
+        assert lab, f'etichetta {inizia_etichetta!r} non trovata'
+        tr = lab[0].getparent().getparent()
+        tbl = tr.getparent()
+        righe = [r for r in tbl if r.tag == q('tr')]
+        i0 = righe.index(tr)
+        for k in range(n_righe):
+            celle = celle_di(righe[i0 + k])
+            vuote = celle[-3:]
+            assert len(vuote) == 3 and all(ctext(c) == '' for c in vuote), f'riga attività {k}: celle non vuote'
+            for nome, c in zip(('N', 'Sotto', 'Cat'), vuote):
+                self._token(c.find('.//w:p', NS), f'att{nome}{k}')
 
     def dopo_par(self, testo_par, chiave, n=0):
         """Riempie il paragrafo vuoto che segue il paragrafo `testo_par`."""
@@ -347,7 +372,88 @@ def pin31(src):
     return m, 'pin31-asseverazione-rinnovo.docx'
 
 
-COSTRUTTORI = {'pin3': pin3, 'pin31': pin31}
+def pin2(src):
+    m = Modulo(os.path.join(src, 'PIN_2_2023_SCIA_FV.docx'))
+    m.dopo_riga('Rif. Pratica VV.F. n.', 'rifPratica')
+    m.dopo_riga('AL COMANDO DEI VIGILI DEL FUOCO DI', 'comando')
+    blocco_titolare(m)
+    # attività: tipo e "sita in" (celle non allineate alle etichette: posizioni verificate)
+    m.campo('tipo di attività (albergo, scuola, etc.) – in caso di SCIA parziale indicare i riferimenti pertinenti', 0, 'tipoAttivita')
+    m.par_idx(126, 'aIndirizzo', 'indirizzo', 130)
+    m.par_idx(127, 'aCivico', 'n. civico', 131)
+    m.par_idx(128, 'aCap', 'c.a.p.', 132)
+    m.par_idx(133, 'aComune', 'Comune', 136)
+    m.par_idx(134, 'aProv', 'provincia', 137)
+    m.par_idx(135, 'aTel', 'telefono', 138)
+    m.righe_attivita('La/e attività oggetto della Segnalazione', 4)
+    # fascicolo tecnico custodito presso
+    m.campo('Nominativo', 0, 'fNominativo')
+    m.par_idx(163, 'fIndirizzo', 'indirizzo', 168)
+    m.par_idx(164, 'fCivico', 'n. civico', 169)
+    m.par_idx(165, 'fCap', 'c.a.p.', 170)
+    m.par_idx(166, 'fComune', 'comune', 171)
+    m.par_idx(167, 'fProv', 'Provincia', 172)
+    blocco_versamento_scia(m)
+    m.campo('Cognome', 1, 'cCognome')
+    m.campo('Nome', 1, 'cNome')
+    m.campo('indirizzo', 4, 'cIndirizzo')
+    m.campo('n. civico', 4, 'cCivico')
+    m.campo('c.a.p.', 4, 'cCap')
+    m.campo('comune', 3, 'cComune')
+    m.campo('Provincia', 1, 'cProv')
+    m.campo('telefono', 3, 'cTel')
+    m.campo('indirizzo di posta elettronica', 1, 'cEmail')
+    m.campo('indirizzo di posta elettronica certificata', 1, 'cPec')
+    m.campo('Titolo professionale', 0, 'dTitolo')
+    m.campo('cognome', 0, 'dCognome')
+    m.campo('nome', 0, 'dNome')
+    m.campo('via – piazza', 0, 'dIndirizzo')
+    m.campo('n. civico', 5, 'dCivico')
+    m.campo('c.a.p.', 5, 'dCap')
+    m.campo('comune', 4, 'dComune')
+    m.campo('provincia', 3, 'dProv')
+    m.campo('telefono', 4, 'dTel')
+    return m, 'pin2-scia.docx'
+
+
+def blocco_versamento_scia(m, righe=6):
+    m.importi(['totale'] + [f'vaImporto{k}' for k in range(righe)])
+    for k in range(righe):
+        m.campo('Attività n.', k, f'vaN{k}')
+
+
+def pin21(src):
+    m = Modulo(os.path.join(src, 'PIN_2_1-2018Asseverazione.docx'))
+    m.dopo_riga('Rif. Pratica VV.F. n.', 'rifPratica')
+    m.campo('Titolo professionale', 0, 'pTitolo')
+    m.campo('Cognome', 0, 'pCognome')
+    m.campo('Nome', 0, 'pNome')
+    # albo e ufficio: celle non allineate alle etichette, posizioni verificate
+    m.par_idx(15, 'pCollegio', 'provincia', 19)
+    m.par_idx(17, 'pAlboNumero', 'n. iscrizione', 16)
+    m.par_idx(22, 'pIndirizzo', 'indirizzo', 25)
+    m.par_idx(23, 'pCivico', 'n. civico', 26)
+    m.par_idx(27, 'pCap', 'c.a.p.', 31)
+    m.par_idx(28, 'pComune', 'comune', 32)
+    m.par_idx(29, 'pProv', 'provincia', 33)
+    m.par_idx(30, 'pTel', 'telefono', 34)
+    m.par_idx(35, 'pEmail', 'indirizzo di posta elettronica', 37)
+    m.par_idx(36, 'pPec', 'indirizzo di posta elettronica certificata', 38)
+    m.casella('nuovo insediamento', 'chkNuovo')
+    m.casella('modifica attività esistente', 'chkModifica')
+    m.campo('tipo di attività (albergo, scuola, etc.) - in caso di SCIA parziale indicare i riferimenti pertinenti', 0, 'tipoAttivita')
+    m.par_idx(50, 'aIndirizzo', 'indirizzo', 54)
+    m.par_idx(51, 'aCivico', 'n. civico', 55)
+    m.par_idx(52, 'aCap', 'c.a.p.', 56)
+    m.par_idx(57, 'aComune', 'comune', 60)
+    m.par_idx(58, 'aProv', 'provincia', 61)
+    m.par_idx(59, 'aTel', 'telefono', 62)
+    m.righe_attivita('Individuata/e ai n./sotto classe/ cat.', 3)
+    m.campo('Data', 0, 'dataFirma')
+    return m, 'pin21-asseverazione-scia.docx'
+
+
+COSTRUTTORI = {'pin3': pin3, 'pin31': pin31, 'pin2': pin2, 'pin21': pin21}
 
 if __name__ == '__main__':
     argv = sys.argv[1:]

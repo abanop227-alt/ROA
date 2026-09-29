@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { condividi, fileDaBlob, isMobile, puoCondividere, scarica } from '../lib/condividi';
 import { leggiAmministratore, leggiTecnico, salvaAmministratore } from '../lib/db';
-import { generaModulo, moduliPredefiniti, nomeFileModulo, valoriPin3, valoriPin31, type ModelloModulo } from '../lib/moduliVvf';
+import { generaModulo, moduliPredefiniti, nomeFileModulo, valoriPin2, valoriPin21, valoriPin3, valoriPin31, type ModelloModulo } from '../lib/moduliVvf';
 import { documentiPratica, praticaDi } from '../lib/pratiche';
 import type { DatiModuli, Sopralluogo, Tecnico } from '../lib/types';
 import { Campo } from './Campo';
@@ -23,7 +23,10 @@ const MODULI_PER_TIPO: Record<'rinnovo' | 'scia', { id: ModelloModulo['id']; doc
     { id: 'pin3', documento: 'pin3', testo: 'MOD. PIN 3 – attestazione di rinnovo' },
     { id: 'pin31', documento: 'pin31', testo: 'MOD. PIN 3.1 – asseverazione' },
   ],
-  scia: [],
+  scia: [
+    { id: 'pin2', documento: 'pin2', testo: 'MOD. PIN 2 – SCIA' },
+    { id: 'pin21', documento: 'pin21', testo: 'MOD. PIN 2.1 – asseverazione' },
+  ],
 };
 
 /** Controlli sui dati prima di generare i moduli: cosa manca per non consegnare un modulo con riquadri vuoti. */
@@ -73,7 +76,7 @@ export default function StepModuli({ s, aggiorna }: Props) {
     setGenerando(id);
     setEsito(null);
     try {
-      const valori = id === 'pin3' ? valoriPin3(s, m, tecnico) : valoriPin31(s, m, tecnico);
+      const valori = { pin3: valoriPin3, pin31: valoriPin31, pin2: valoriPin2, pin21: valoriPin21 }[id](s, m, tecnico);
       const blob = await generaModulo(id, valori);
       const file = fileDaBlob(blob, nomeFileModulo(id, s));
       await salvaAmministratore(s.condominio.pressoAmministrazione, m.titolare).catch(() => {});
@@ -158,12 +161,16 @@ export default function StepModuli({ s, aggiorna }: Props) {
             {campo('Comando VV.F. di', 'comando')}
           </details>
           <details className="card">
-            <summary>Rinnovo: SCIA precedente e versamento</summary>
-            {campo('SCIA / rinnovo precedente', 'sciaPrecedente', { aiuto: 'es. RINNOVO CPI DEL 28/04/2021' })}
-            <label className="riga-check">
-              <input type="checkbox" checked={m.allegaAsseverazione} onChange={(e) => set('allegaAsseverazione', e.target.checked)} />
-              <span>Allega l’asseverazione (MOD. PIN 3.1)</span>
-            </label>
+            <summary>{p.tipo === 'rinnovo' ? 'Rinnovo: SCIA precedente e versamento' : 'Versamento'}</summary>
+            {p.tipo === 'rinnovo' && (
+              <>
+                {campo('SCIA / rinnovo precedente', 'sciaPrecedente', { aiuto: 'es. RINNOVO CPI DEL 28/04/2021' })}
+                <label className="riga-check">
+                  <input type="checkbox" checked={m.allegaAsseverazione} onChange={(e) => set('allegaAsseverazione', e.target.checked)} />
+                  <span>Allega l’asseverazione (MOD. PIN 3.1)</span>
+                </label>
+              </>
+            )}
             {campo('Totale versamento (€)', 'versamentoTotale')}
             {m.versamento.map((_, i) => (
               <div key={i} className="griglia-2">
@@ -173,6 +180,7 @@ export default function StepModuli({ s, aggiorna }: Props) {
               </div>
             ))}
           </details>
+          {p.tipo === 'rinnovo' && (
           <details className="card">
             <summary>Asseverazione (MOD. PIN 3.1)</summary>
             {campo('SCIA a firma di', 'sciaFirma')}
@@ -187,6 +195,7 @@ export default function StepModuli({ s, aggiorna }: Props) {
               </div>
             ))}
           </details>
+          )}
 
           {mancano.length > 0 && (
             <p className="promemoria">
@@ -204,7 +213,6 @@ export default function StepModuli({ s, aggiorna }: Props) {
           <p className="muto piccolo">Il Word è il modulo ufficiale compilato: controllalo, firmalo e convertilo in PDF come fai oggi.</p>
         </>
       )}
-      {p.tipo === 'scia' && <p className="muto">I moduli della SCIA (MOD. PIN 2 e 2.1) arrivano a breve: per ora compili l’elenco dei documenti qui sotto.</p>}
 
       <h3 className="titolo-sezione">Documenti</h3>
       <p className="muto piccolo">

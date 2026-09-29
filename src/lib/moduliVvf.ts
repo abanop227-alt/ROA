@@ -8,7 +8,7 @@ import { dataItaliana } from './util';
 export type Valori = Record<string, string | boolean>;
 
 export interface ModelloModulo {
-  id: 'pin3' | 'pin31';
+  id: 'pin3' | 'pin31' | 'pin2' | 'pin21';
   file: string;
   /** nome del file generato, senza estensione */
   nome: string;
@@ -17,6 +17,8 @@ export interface ModelloModulo {
 export const MODELLI: Record<ModelloModulo['id'], ModelloModulo> = {
   pin3: { id: 'pin3', file: 'pin3-rinnovo.docx', nome: 'MOD. PIN 3 - 2023_RINNOVO PERIODICO' },
   pin31: { id: 'pin31', file: 'pin31-asseverazione-rinnovo.docx', nome: 'MOD. PIN 3.1 - 2014_ASSEVERAZIONE PER RINNOVO' },
+  pin2: { id: 'pin2', file: 'pin2-scia.docx', nome: 'MOD. PIN 2 - 2023_SCIA' },
+  pin21: { id: 'pin21', file: 'pin21-asseverazione-scia.docx', nome: 'MOD. PIN 2.1 - 2018_ASSEVERAZIONE' },
 };
 
 const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -258,10 +260,113 @@ export function valoriPin31(s: Sopralluogo, d: DatiModuli, tecnico: Tecnico): Va
   return v;
 }
 
+/** "77.1.A" → { n: "77", sotto: "1", cat: "A" } */
+export function dividiCodice(codice: string): { n: string; sotto: string; cat: string } {
+  const [n = '', sotto = '', cat = ''] = codice.trim().split('.');
+  return { n, sotto, cat };
+}
+
+function valoriClassi(codici: string[], righe: number): Valori {
+  const v: Valori = {};
+  for (let k = 0; k < righe; k++) {
+    const c = dividiCodice(codici[k] ?? '');
+    v[`attN${k}`] = c.n;
+    v[`attSotto${k}`] = c.sotto;
+    v[`attCat${k}`] = c.cat;
+  }
+  return v;
+}
+
+function valoriProfessionista(p: ProfessionistaVvf): Valori {
+  return {
+    cCognome: maiuscolo(p.cognome),
+    cNome: maiuscolo(p.nome),
+    cIndirizzo: maiuscolo(p.ufficio.indirizzo),
+    cCivico: p.ufficio.civico,
+    cCap: p.ufficio.cap,
+    cComune: maiuscolo(p.ufficio.comune),
+    cProv: maiuscolo(p.ufficio.provincia),
+    cTel: p.ufficio.telefono,
+    cEmail: p.email,
+    cPec: p.pec,
+    dTitolo: maiuscolo(p.delegato.titolo),
+    dCognome: maiuscolo(p.delegato.cognome),
+    dNome: maiuscolo(p.delegato.nome),
+    dIndirizzo: maiuscolo(p.delegato.indirizzo),
+    dCivico: p.delegato.civico,
+    dCap: p.delegato.cap,
+    dComune: maiuscolo(p.delegato.comune),
+    dProv: maiuscolo(p.delegato.provincia),
+    dTel: p.delegato.telefono,
+  };
+}
+
+/** MOD. PIN 2 – SCIA. */
+export function valoriPin2(s: Sopralluogo, d: DatiModuli, tecnico: Tecnico): Valori {
+  const p = tecnico.vvf ?? professionistaVuoto();
+  const t = d.titolare;
+  const codici = s.attivita.map((a) => a.codice);
+  const v: Valori = {
+    rifPratica: s.pratica?.nPraticaVvf ?? '',
+    comando: maiuscolo(d.comando),
+    ...valoriTitolare(d),
+    ...valoriAttivita(d),
+    ...valoriClassi(codici, 4),
+    // fascicolo tecnico custodito presso l'amministratore
+    fNominativo: maiuscolo(`${t.nome} ${t.cognome}`),
+    fIndirizzo: maiuscolo(t.indirizzo),
+    fCivico: t.civico,
+    fCap: t.cap,
+    fComune: maiuscolo(t.comune),
+    fProv: maiuscolo(t.provincia),
+    ...valoriProfessionista(p),
+    totale: d.versamentoTotale.trim(),
+  };
+  for (let k = 0; k < 6; k++) {
+    const r = d.versamento[k];
+    v[`vaN${k}`] = r?.n ?? '';
+    v[`vaImporto${k}`] = r?.importo.trim() ?? '';
+  }
+  return v;
+}
+
+/** MOD. PIN 2.1 – asseverazione della SCIA. */
+export function valoriPin21(s: Sopralluogo, d: DatiModuli, tecnico: Tecnico): Valori {
+  const p = tecnico.vvf ?? professionistaVuoto();
+  const a = d.attivita;
+  return {
+    rifPratica: s.pratica?.nPraticaVvf ?? '',
+    pTitolo: maiuscolo(p.titolo),
+    pCognome: maiuscolo(p.cognome),
+    pNome: maiuscolo(p.nome),
+    pCollegio: maiuscolo(`${p.collegio} ${p.alboProvincia}`),
+    pAlboNumero: p.alboNumero,
+    pIndirizzo: maiuscolo(p.ufficio.indirizzo),
+    pCivico: p.ufficio.civico,
+    pCap: p.ufficio.cap,
+    pComune: maiuscolo(p.ufficio.comune),
+    pProv: maiuscolo(p.ufficio.provincia),
+    pTel: p.ufficio.telefono,
+    pEmail: p.email,
+    pPec: p.pec,
+    chkNuovo: false,
+    chkModifica: false,
+    tipoAttivita: maiuscolo(a.tipo),
+    aIndirizzo: maiuscolo(a.indirizzo),
+    aCivico: a.civico,
+    aCap: a.cap,
+    aComune: maiuscolo(a.comune),
+    aProv: maiuscolo(a.provincia),
+    aTel: a.telefono,
+    ...valoriClassi(s.attivita.map((x) => x.codice), 3),
+    dataFirma: '',
+  };
+}
+
 /** Nome del file: "VIA CIVICO_MOD. PIN 3 - 2023_RINNOVO PERIODICO.docx" come nell'archivio dello studio. */
 export function nomeFileModulo(id: ModelloModulo['id'], s: Sopralluogo): string {
   const c = s.condominio;
   const base = [c.indirizzo.trim() || 'pratica'].join(' ').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
-  const num = id === 'pin3' ? '01_' : '02_';
+  const num = id === 'pin3' || id === 'pin2' ? '01_' : '02_';
   return `${num}${base}_${MODELLI[id].nome}.docx`;
 }
