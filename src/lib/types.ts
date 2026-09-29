@@ -208,6 +208,33 @@ export interface ProvaIdranti {
   fotoRapportoIds: string[];
 }
 
+// ======================= Pratica =======================
+
+export type TipoPratica = 'roa' | 'scia' | 'rinnovo';
+/**
+ * ROA: bozza → emessa → lavori → eseguiti (la SCIA si compila solo a lavori eseguiti).
+ * SCIA e rinnovo: bozza → presentata.
+ */
+export type StatoPratica = 'bozza' | 'emessa' | 'lavori' | 'eseguiti' | 'presentata';
+
+export interface Pratica {
+  tipo: TipoPratica;
+  stato: StatoPratica;
+  /** chi segue la pratica (Aba, Federico, Zahra…) */
+  referente: string;
+  /** ROA da cui nasce una SCIA (o pratica precedente di un rinnovo) */
+  origineId: string | null;
+  /** yyyy-mm-dd dell'ultimo cambio di stato */
+  dataStato: string;
+  /** SCIA e rinnovo: data di presentazione e protocollo PEC */
+  dataPresentazione: string;
+  protocolloPec: string;
+  /** numero pratica VV.F. (NOP) */
+  nPraticaVvf: string;
+  /** rinnovo: le attività hanno rinnovi completamente indipendenti (scadenze distinte) */
+  indipendenti?: boolean;
+}
+
 export interface Sopralluogo {
   versione: 2;
   id: string;
@@ -228,6 +255,10 @@ export interface Sopralluogo {
   conclusioni: string | null;
   /** prova di pressione e portata degli idranti (facoltativa) */
   provaIdranti?: ProvaIdranti | null;
+  /** tipo e stato della pratica; assente = ROA in bozza (sopralluoghi delle versioni precedenti) */
+  pratica?: Pratica;
+  /** elenco di controllo dei documenti della pratica (SCIA e rinnovo): chiave → presente */
+  documenti?: Record<string, boolean>;
 }
 
 export interface FotoRecord {

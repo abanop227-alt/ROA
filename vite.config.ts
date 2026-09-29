@@ -1,18 +1,31 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+/** Nome del prodotto: stessi valori di src/config/studio.ts (variabili VITE_PRODOTTO e VITE_PRODOTTO_BREVE). */
+function identita(mode: string) {
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  return { prodotto: env.VITE_PRODOTTO || 'Prevenzioni Incendi STEMA', breve: env.VITE_PRODOTTO_BREVE || 'PI STEMA' };
+}
+
+export default defineConfig(({ mode }) => {
+  const { prodotto, breve } = identita(mode);
+  const titoloHtml: Plugin = {
+    name: 'titolo-prodotto',
+    transformIndexHtml: (html) => html.replace('%PRODOTTO%', prodotto).replace('%PRODOTTO_BREVE%', breve),
+  };
+  return {
   base: '/ROA/',
   plugins: [
     react(),
+    titoloHtml,
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       manifest: {
-        name: 'ROA Antincendio',
-        short_name: 'ROA',
-        description: 'Sopralluoghi e bozze ROA antincendio (D.P.R. 151/2011)',
+        name: prodotto,
+        short_name: breve,
+        description: 'Prevenzione incendi: sopralluoghi, ROA, prove idranti, SCIA e rinnovi (D.P.R. 151/2011)',
         lang: 'it',
         start_url: '/ROA/',
         scope: '/ROA/',
@@ -33,4 +46,5 @@ export default defineConfig({
       },
     }),
   ],
+  };
 });

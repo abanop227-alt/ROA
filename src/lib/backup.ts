@@ -1,3 +1,4 @@
+import { STUDIO } from '../config/studio';
 import { base64ToBytes, bytesToBase64 } from './base64';
 import { db, leggiTecnico, salvaTecnico } from './db';
 import type { FotoRecord, Sopralluogo, Tecnico } from './types';
@@ -53,7 +54,7 @@ export async function importaBackup(testo: string): Promise<EsitoImport> {
     throw new Error('Il file non è un JSON valido.');
   }
   if (b?.formato !== 'roa-backup' || !Array.isArray(b.sopralluoghi)) {
-    throw new Error('Il file non è un backup di ROA Antincendio.');
+    throw new Error(`Il file non è un backup di ${STUDIO.prodotto}.`);
   }
   const d = await db();
   const esito: EsitoImport = { importati: 0, saltati: 0, foto: 0 };

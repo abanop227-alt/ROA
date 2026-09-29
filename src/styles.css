@@ -311,6 +311,23 @@ textarea {
   font-weight: 700;
 }
 
+/* ---------- elenco pratiche ---------- */
+.filtri {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.badge-riga {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.stato-eseguiti,
+.stato-presentata {
+  background: #d7f0d9;
+  color: #1b5e20;
+}
+
 /* ---------- prova idranti ---------- */
 .misura {
   border-bottom: 1px solid var(--bordo);

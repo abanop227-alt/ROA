@@ -37,6 +37,7 @@ import {
   righeTitolo,
   testoConclusioni,
 } from './catalogo';
+import { STUDIO } from '../config/studio';
 import { totaleComplessivo, zoneComputo } from './computo';
 import { formatNumero, formatQuantita, parseNumero } from './numeri';
 import type { Catalogo, Sopralluogo, Tecnico } from './types';
@@ -814,7 +815,7 @@ export function assemblaDocumento({ s, tecnico, titolo: titoloFile, frontespizio
   const header = intestazione(opz.cartaIntestata);
 
   return new Document({
-    creator: tecnico.firma || 'ROA Antincendio',
+    creator: tecnico.firma || STUDIO.prodotto,
     title: titoloFile,
     features: { updateFields: true },
     styles: {

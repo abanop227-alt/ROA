@@ -3,14 +3,33 @@ import { migraSopralluogo, sincronizza, titoloBreve } from '../lib/catalogo';
 import { condividi, fileDaBlob, isMobile, puoCondividere, scarica } from '../lib/condividi';
 import { impostaAperto, programmaSync } from '../lib/autosync';
 import { leggiCartaIntestata, leggiFoto, leggiSopralluogo, leggiTecnico, salvaSopralluogo } from '../lib/db';
-import type { Catalogo, Sopralluogo } from '../lib/types';
+import { praticaDi } from '../lib/pratiche';
+import type { Catalogo, Sopralluogo, TipoPratica } from '../lib/types';
 import Step1Attivita from './Step1Attivita';
 import Step2Condominio from './Step2Condominio';
 import Step3Voci, { TabsAttivita, CARTELLI } from './Step3Voci';
 import Step4Riepilogo from './Step4Riepilogo';
+import StatoPratica from './StatoPratica';
 import StepIdranti from './StepIdranti';
+import StepModuli from './StepModuli';
+import StepPratica from './StepPratica';
 
-const PASSI = ['Attività', 'Condominio', 'Voci', 'Idranti', 'Riepilogo'];
+type IdPasso = 'attivita' | 'condominio' | 'voci' | 'idranti' | 'riepilogo' | 'pratica' | 'moduli';
+const NOME_PASSO: Record<IdPasso, string> = {
+  attivita: 'Attività',
+  condominio: 'Condominio',
+  voci: 'Voci',
+  idranti: 'Idranti',
+  riepilogo: 'Riepilogo',
+  pratica: 'Pratica',
+  moduli: 'Moduli',
+};
+/** Passi del wizard per tipo di pratica. */
+const PASSI_TIPO: Record<TipoPratica, IdPasso[]> = {
+  roa: ['attivita', 'condominio', 'voci', 'idranti', 'riepilogo'],
+  rinnovo: ['attivita', 'condominio', 'pratica', 'idranti', 'moduli'],
+  scia: ['attivita', 'condominio', 'pratica', 'moduli'],
+};
 
 type StatoSalvataggio = 'salvato' | 'modificato' | 'errore';
 
@@ -164,7 +183,9 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
     );
   }
 
-  const ultimo = passo === PASSI.length - 1;
+  const passi = PASSI_TIPO[praticaDi(s).tipo];
+  const corrente: IdPasso = passi[Math.min(passo, passi.length - 1)];
+  const ultimo = passo >= passi.length - 1;
 
   return (
     <div className="wizard">
@@ -179,29 +200,36 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
           </span>
         </div>
         <nav className="stepper" aria-label="Passi">
-          {PASSI.map((nome, i) => (
+          {passi.map((id, i) => (
             <button
-              key={nome}
+              key={id}
               className={`passo ${i === passo ? 'attivo' : ''} ${i < passo ? 'fatto' : ''}`}
               aria-current={i === passo ? 'step' : undefined}
               onClick={() => onPasso(i)}
             >
               <span className="passo-num">{i < passo ? '✓' : i + 1}</span>
-              <span className="passo-nome">{nome}</span>
+              <span className="passo-nome">{NOME_PASSO[id]}</span>
             </button>
           ))}
         </nav>
-        {passo === 2 && s.attivita.length > 0 && <TabsAttivita s={s} tab={tab} onTab={setTab} />}
+        {corrente === 'voci' && s.attivita.length > 0 && <TabsAttivita s={s} tab={tab} onTab={setTab} />}
       </header>
 
       <main className="contenuto con-barra">
-        {passo === 0 && <Step1Attivita s={s} catalogo={catalogo} aggiorna={aggiorna} />}
-        {passo === 1 && <Step2Condominio s={s} aggiorna={aggiorna} />}
-        {passo === 2 && (
+        {corrente === 'attivita' && <Step1Attivita s={s} catalogo={catalogo} aggiorna={aggiorna} />}
+        {corrente === 'condominio' && <Step2Condominio s={s} aggiorna={aggiorna} />}
+        {corrente === 'voci' && (
           <Step3Voci s={s} catalogo={catalogo} tab={tab} aggiorna={aggiorna} onVaiAttivita={() => onPasso(0)} />
         )}
-        {passo === 3 && <StepIdranti s={s} aggiorna={aggiorna} />}
-        {passo === 4 && (
+        {corrente === 'idranti' && <StepIdranti s={s} aggiorna={aggiorna} />}
+        {corrente === 'pratica' && <StepPratica s={s} aggiorna={aggiorna} />}
+        {corrente === 'moduli' && <StepModuli s={s} aggiorna={aggiorna} />}
+        {corrente === 'riepilogo' && (
+          <>
+          <section>
+            <h2 className="titolo-passo">Stato della pratica</h2>
+            <StatoPratica s={s} aggiorna={aggiorna} />
+          </section>
           <Step4Riepilogo
             s={s}
             catalogo={catalogo}
@@ -217,6 +245,7 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
             generazioneIdranti={generazioneIdranti}
             docIdranti={docIdranti}
           />
+          </>
         )}
       </main>
 
@@ -224,9 +253,13 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
         <button className="btn btn-grande" onClick={() => (passo === 0 ? onEsci() : onPasso(passo - 1))}>
           ‹ {passo === 0 ? 'Elenco' : 'Indietro'}
         </button>
-        {ultimo ? (
+        {ultimo && corrente === 'riepilogo' ? (
           <button className="btn btn-grande btn-primario" onClick={generaWord} disabled={generazione === 'in-corso'}>
             {generazione === 'in-corso' ? 'Genero…' : 'Genera Word'}
+          </button>
+        ) : ultimo ? (
+          <button className="btn btn-grande btn-primario" onClick={onEsci}>
+            Fine
           </button>
         ) : (
           <button className="btn btn-grande btn-primario" onClick={() => onPasso(passo + 1)}>
