@@ -1,36 +1,12 @@
-import { committente, nuovaAttivita } from '../lib/catalogo';
+import { committente } from '../lib/catalogo';
 import { eliminaFoto } from '../lib/db';
-import { indirizzoStabile, type Stabile } from '../lib/stabili';
-import type { Catalogo, DatiCondominio, Sopralluogo } from '../lib/types';
+import type { DatiCondominio, Sopralluogo } from '../lib/types';
 import { Campo } from './Campo';
 import FotoVoce from './FotoVoce';
-import RicercaStabile from './RicercaStabile';
 
 interface Props {
   s: Sopralluogo;
-  catalogo: Catalogo;
   aggiorna: (f: (s: Sopralluogo) => Sopralluogo) => void;
-}
-
-/** Precompila condominio, amministrazione, NOP e attività da uno stabile importato (non tocca ciò che è già compilato). */
-export function applicaStabile(x: Sopralluogo, st: Stabile, catalogo: Catalogo): Sopralluogo {
-  const c = x.condominio;
-  const nome = st.nome.replace(/^condominio\s+/i, '');
-  const nuove = st.attivita.filter((cod) => !x.attivita.some((a) => a.codice === cod)).map((cod) => nuovaAttivita(catalogo, cod));
-  return {
-    ...x,
-    attivita: [...x.attivita, ...nuove],
-    condominio: {
-      ...c,
-      nome: c.nome || (nome.toLowerCase() === st.via.toLowerCase() ? '' : nome),
-      indirizzo: indirizzoStabile(st),
-      cap: st.cap || c.cap,
-      comune: st.comune || c.comune,
-      codiceFiscale: st.codiceFiscale || c.codiceFiscale,
-      pressoAmministrazione: c.pressoAmministrazione || (st.amministrazione ? `Amministrazione ${st.amministrazione}` : ''),
-    },
-    ...(x.pratica && /^\d{4,}$/.test(st.nop) && !x.pratica.nPraticaVvf ? { pratica: { ...x.pratica, nPraticaVvf: st.nop } } : {}),
-  };
 }
 
 type Def = { k: keyof DatiCondominio; etichetta: string; tipo?: string; inputMode?: 'tel' | 'numeric'; aiuto?: string };
@@ -53,7 +29,7 @@ const INCARICO: Def[] = [
   { k: 'dataRelazione', etichetta: 'Data relazione (firma)', tipo: 'date' },
 ];
 
-export default function Step2Condominio({ s, catalogo, aggiorna }: Props) {
+export default function Step2Condominio({ s, aggiorna }: Props) {
   const campo = (c: Def) => (
     <Campo
       key={c.k}
@@ -69,7 +45,6 @@ export default function Step2Condominio({ s, catalogo, aggiorna }: Props) {
   return (
     <section>
       <h2 className="titolo-passo">Dati condominio</h2>
-      <RicercaStabile onScegli={(st) => aggiorna((x) => applicaStabile(x, st, catalogo))} />
       <div className="card">
         {CONDOMINIO.map(campo)}
         <Campo

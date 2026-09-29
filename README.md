@@ -1,69 +1,55 @@
-# Prevenzioni Incendi STEMA
+# ROA Antincendio
 
-App per la prevenzione incendi degli studi tecnici (D.P.R. 151/2011): sopralluoghi e ROA, prove idranti, SCIA e rinnovi.
-Si installa sul telefono, funziona senza rete e senza server (Vite + React + TypeScript, PWA).
-Nata dalla app "ROA Antincendio"; il repository e l'indirizzo di pubblicazione (`/ROA/`) restano invariati.
+App web mobile-first (PWA, funziona offline) per i sopralluoghi delle ROA antincendio
+(D.P.R. 151/2011): selezione delle lavorazioni, foto e generazione della bozza Word (.docx)
+con il computo metrico.
 
-## Cosa fa
+App pubblicata: https://abanop227-alt.github.io/ROA/
 
-- **Elenco pratiche**: ROA, SCIA e rinnovi con stato, referente, filtri e ricerca. Nuovo, apri, duplica, esporta, elimina.
-- **Flusso della ROA**: in compilazione → ROA emessa → lavori in corso → lavori eseguiti. La **SCIA si può creare solo a lavori
-  eseguiti**; nasce dalla ROA con stabile, attività e certificazioni già indicati. Il **rinnovo** si può creare dalla ROA.
-- **ROA** (4 passi + idranti): attività (74, 75, 77…), condominio, voci (frasi tipo con foto e computo), riepilogo.
-  Prima del Word compare un elenco di **controlli** (dati mancanti, date incoerenti, frasi con [parentesi] o senza foto).
-  Il Word ha frontespizio, indice compilato, capitoli per attività, certificazioni, conclusioni e computo.
-- **Computo**: esportazione in Excel senza prezzi (per chi li inserisce) e reimportazione dei prezzi.
-- **Prova idranti**: `Q = K × √(10 × P)`, esito rispetto alla portata minima, Word separato dalla ROA; se la prova l'ha fatta
-  un'altra ditta si usa la portata misurata e il rapporto va in allegato.
-- **SCIA e rinnovo**: stato, numero pratica VV.F., protocollo PEC, data di presentazione, scadenza del rinnovo
-  (5 anni; 10 per le attività 6, 7, 8, 64, 71, 72, 77; termine minore se le attività non sono indipendenti) ed elenco di
-  controllo dei documenti.
-- **Moduli VV.F.**: MOD. PIN 3 e 3.1 (rinnovo) e MOD. PIN 2 e 2.1 (SCIA) compilati dai moduli ufficiali con i dati del titolare,
-  del condominio, delle attività e del professionista (impostazioni del dispositivo). I modelli sono in `public/moduli/` e si costruiscono dai
-  moduli ufficiali vuoti con `python scripts/moduli/costruisci_moduli.py` (vedi il file per gli altri moduli PIN).
-- **Stabili**: importazione degli Excel "Stabili … .xlsx" (anagrafica, ricerca nel passo Condominio) e copia aggiornata di ogni elenco con
-  ROA, SCIA, rinnovo e scadenza ricavati dalle pratiche.
-- **Elenco lavori e resoconti**: import di "ELENCO LAVORI 2026.xlsx", righe aggiornate dallo stato delle pratiche, resoconto mensile per
-  amministrazione (Word ed Excel) e cartella `_AGGIORNAMENTI` dell'archivio scritta dal computer (aggiornamento automatico all'apertura).
-- **Foto**: ridotte a 1600 px, importate nell'ordine di scatto.
-- **Backup** `.json` con foto e **sincronizzazione** tra dispositivi e colleghi tramite un repository GitHub privato
-  (per ogni pratica vince la modifica più recente).
-- **Libreria** di frasi sostituibile senza toccare il codice; **impostazioni del tecnico** (intestazione, firma, piè di pagina,
-  carta intestata) salvate solo sul dispositivo.
+## Avvio in locale
 
-## Dove sta cosa
-
-| Cosa | File |
-|---|---|
-| Libreria (attività, sezioni, frasi, certificazioni) | `src/data/roa-dati.json`, generata da `scripts/libreria.py` |
-| Word della ROA e assemblaggio comune | `src/lib/docx.ts` |
-| Word della prova idranti e calcolo | `src/lib/docxIdranti.ts`, `src/lib/idranti.ts` |
-| Pratiche, stati, scadenze, documenti | `src/lib/pratiche.ts` |
-| Moduli VV.F. | `src/lib/moduliVvf.ts`, `scripts/moduli/costruisci_moduli.py`, `public/moduli/` |
-| Stabili e loro aggiornamento | `src/lib/stabili.ts`, `src/lib/stabiliAggiornati.ts` |
-| Elenco lavori, resoconti, archivio | `src/lib/commesse.ts`, `src/lib/resoconto.ts`, `src/lib/aggiornamenti.ts`, `src/lib/archivio.ts` |
-| Controlli prima del Word | `src/lib/controlli.ts` |
-| Computo e Excel | `src/lib/computo.ts`, `src/lib/computoXlsx.ts` |
-| Salvataggio e backup | `src/lib/db.ts`, `src/lib/backup.ts` |
-| Sincronizzazione | `src/lib/sync.ts`, `src/lib/autosync.ts` |
-| Schermate | `src/components/` |
-| Identità del prodotto | `src/config/studio.ts`, `vite.config.ts` |
-
-## Sviluppo
-
-```
-npm ci
-npm run dev      # http://localhost:5173/ROA/
-npm test         # test automatici
-npm run build    # controllo dei tipi e build
+```bash
+npm install
+npm run dev -- --host    # apri dal telefono l'indirizzo "Network" (stessa rete Wi-Fi)
+npm test                 # test: istanziazione voci, computo, .docx, backup
+npm run build            # build di produzione in dist/
 ```
 
-Ogni modifica caricata su `main` esegue i test, costruisce l'app e la pubblica su GitHub Pages.
+Nota: service worker, installazione come app e condivisione richiedono HTTPS; con
+`npm run dev -- --host` (http://192.168.x.x) si prova il flusso, mentre installazione e uso
+offline si provano sulla versione pubblicata su GitHub Pages.
 
-## Versione per altri studi
+## Libreria frasi tipo
 
-Il nome dell'app si cambia con `VITE_PRODOTTO` e `VITE_PRODOTTO_BREVE` (vedi `.env.example`). Quello che è dello studio resta fuori dal
-codice: intestazione, firma, piè di pagina e carta intestata sono impostazioni del dispositivo; la libreria di frasi si carica da
-file (`roa-dati.json`); i dati dei clienti stanno solo sui dispositivi e nel repository privato di sincronizzazione.
-La libreria predefinita contiene frasi ricavate dalle ROA dello studio STEMA: prima di distribuire l'app ad altri studi va sostituita
-con una libreria neutra o con la loro.
+`src/data/roa-dati.json` è la libreria. Contiene attività (classificazione D.P.R. 151/11), gruppi 74 / 75 / 77
+con regole tecniche, sezioni (es. "Vano scala", "Mezzi di estinzione"), frasi tipo con didascalia foto e
+lavorazioni di computo, certificazioni per attività, suggerimenti per cartelli e "nota bene", testi fissi.
+Le parti da completare in sopralluogo sono tra [parentesi quadre].
+
+Il JSON si genera da `scripts/libreria.py` (`python3 scripts/libreria.py`), più comodo da modificare:
+si possono aggiungere frasi, sezioni o un nuovo gruppo (es. "49" per i gruppi elettrogeni) senza toccare il codice.
+Un codice attività usa le frasi del gruppo con lo stesso numero (75.3.C → gruppo 75).
+Dall'app si può anche caricare un `roa-dati.json` modificato (Home → Libreria voci → Carica libreria).
+
+## Struttura
+
+```
+src/
+  data/roa-dati.json      libreria
+  lib/types.ts            modello dati
+  lib/catalogo.ts         libreria, sezioni e frasi per attività, testi composti (titolo, scopo, conclusioni)
+  lib/computo.ts          computo metrico per zona (una tabella per attività)
+  lib/numeri.ts           numeri in formato italiano
+  lib/docx.ts             generazione del documento Word
+  lib/db.ts               IndexedDB (sopralluoghi, foto come Blob, libreria)
+  lib/foto.ts             ridimensionamento foto (1600 px, JPEG 0,8)
+  lib/backup.ts           esporta/importa backup .json (foto in base64)
+  components/             Home, Wizard e i 4 passi
+tests/                    test Vitest
+.github/workflows/        build e deploy su GitHub Pages a ogni push su main
+```
+
+## Pubblicazione
+
+A ogni push su `main` la GitHub Action "Pubblica su GitHub Pages" esegue test, build e deploy.
+Una tantum: GitHub → Settings → Pages → Build and deployment → Source: **GitHub Actions**.

@@ -169,72 +169,6 @@ export interface Cartello {
   descrizione: string;
 }
 
-/** Una misura della prova idranti: pressioni in bar; la portata si calcola o si scrive se già misurata. */
-export interface MisuraIdranti {
-  pStatica: string;
-  pEfflusso: string;
-  /** portata già misurata dallo strumento (l/min): se c'è, non si calcola */
-  portataMisurata: string;
-}
-
-/** Prova di pressione e portata della rete idranti: produce un secondo Word, separato dalla ROA. */
-export interface ProvaIdranti {
-  attiva: boolean;
-  /** codice dell'attività a cui si riferisce (es. 75.2.B) */
-  attivita: string;
-  dataProva: string; // yyyy-mm-dd
-  /** es. "Verifica del § 6.1.4 del D.M. 01/02/1986 per ATT. 75.2.B." */
-  riferimento: string;
-  /** titolo della zona nel documento (AUTORIMESSA, EDIFICIO…) */
-  zona: string;
-  /** descrizione dell'impianto (piani, idranti, attacco autopompa) */
-  descrizioneImpianto: string;
-  /** es. "al momento del collaudo del gruppo di pompaggio" */
-  circostanza: string;
-  /** se la prova l'ha fatta un'altra ditta: nome e riferimento del rapporto */
-  eseguitaDa: string;
-  idrantiTotali: string;
-  idrantiAperti: string;
-  strumento: string;
-  /** coefficiente K dello strumento (tabella dello strumento in uso) */
-  coefficienteK: string;
-  /** portata minima richiesta all'idrante più sfavorito, l/min */
-  portataMinima: string;
-  misure: MisuraIdranti[];
-  note: string;
-  fotoAttaccoIds: string[];
-  fotoProvaIds: string[];
-  /** pagine/foto del rapporto della ditta, in allegato al documento */
-  fotoRapportoIds: string[];
-}
-
-// ======================= Pratica =======================
-
-export type TipoPratica = 'roa' | 'scia' | 'rinnovo';
-/**
- * ROA: bozza → emessa → lavori → eseguiti (la SCIA si compila solo a lavori eseguiti).
- * SCIA e rinnovo: bozza → presentata.
- */
-export type StatoPratica = 'bozza' | 'emessa' | 'lavori' | 'eseguiti' | 'presentata';
-
-export interface Pratica {
-  tipo: TipoPratica;
-  stato: StatoPratica;
-  /** chi segue la pratica (Aba, Federico, Zahra…) */
-  referente: string;
-  /** ROA da cui nasce una SCIA (o pratica precedente di un rinnovo) */
-  origineId: string | null;
-  /** yyyy-mm-dd dell'ultimo cambio di stato */
-  dataStato: string;
-  /** SCIA e rinnovo: data di presentazione e protocollo PEC */
-  dataPresentazione: string;
-  protocolloPec: string;
-  /** numero pratica VV.F. (NOP) */
-  nPraticaVvf: string;
-  /** rinnovo: le attività hanno rinnovi completamente indipendenti (scadenze distinte) */
-  indipendenti?: boolean;
-}
-
 export interface Sopralluogo {
   versione: 2;
   id: string;
@@ -253,14 +187,6 @@ export interface Sopralluogo {
   nonAggravio: boolean | null;
   /** null = testo generato automaticamente */
   conclusioni: string | null;
-  /** prova di pressione e portata degli idranti (facoltativa) */
-  provaIdranti?: ProvaIdranti | null;
-  /** tipo e stato della pratica; assente = ROA in bozza (sopralluoghi delle versioni precedenti) */
-  pratica?: Pratica;
-  /** elenco di controllo dei documenti della pratica (SCIA e rinnovo): chiave → presente */
-  documenti?: Record<string, boolean>;
-  /** dati per compilare i moduli VV.F. */
-  moduli?: DatiModuli;
 }
 
 export interface FotoRecord {
@@ -273,64 +199,6 @@ export interface FotoRecord {
   creato: number;
 }
 
-// ======================= Moduli VV.F. =======================
-
-export interface IndirizzoModulo {
-  indirizzo: string;
-  civico: string;
-  cap: string;
-  comune: string;
-  provincia: string;
-  telefono: string;
-}
-
-export interface PersonaModulo extends IndirizzoModulo {
-  cognome: string;
-  nome: string;
-}
-
-/** Dati del professionista antincendio (impostazioni del dispositivo): compilano MOD. PIN 2.1, 3.1 e i recapiti dei moduli. */
-export interface ProfessionistaVvf {
-  titolo: string; // GEOM.
-  cognome: string;
-  nome: string;
-  collegio: string; // COLLEGIO GEOM.
-  alboProvincia: string;
-  alboNumero: string;
-  codiceMI: string;
-  ufficio: IndirizzoModulo;
-  email: string;
-  pec: string;
-  /** delegato al ritiro (facoltativo) */
-  delegato: PersonaModulo & { titolo: string };
-}
-
-export interface RigaVersamento {
-  n: string;
-  sotto: string;
-  importo: string;
-}
-
-/** Dati della pratica per i moduli (si compilano una volta e valgono per tutti i moduli della pratica). */
-export interface DatiModuli {
-  comando: string; // provincia del Comando VV.F.
-  titolare: PersonaModulo & { codiceFiscale: string; qualifica: string; email: string; pec: string };
-  ragione: string;
-  sede: IndirizzoModulo;
-  attivita: IndirizzoModulo & { tipo: string; classe: string; altre: string };
-  /** MOD. PIN 3: SCIA / rinnovo precedente (es. RINNOVO CPI DEL 28/04/2021) */
-  sciaPrecedente: string;
-  /** MOD. PIN 3.1: a firma di */
-  sciaFirma: string;
-  /** MOD. PIN 3.1: data del sopralluogo (yyyy-mm-dd) */
-  dataSopralluogo: string;
-  allegaAsseverazione: boolean;
-  versamentoTotale: string;
-  versamento: RigaVersamento[];
-  /** MOD. PIN 3.1, sezione A: impianti di protezione attiva verificati */
-  impianti: { attivo: boolean; testo: string }[];
-}
-
 export interface Tecnico {
   /** righe dell'intestazione nella parte generale */
   intestazione: string;
@@ -339,6 +207,4 @@ export interface Tecnico {
   societa: string;
   iniziali: string;
   revisione: string;
-  /** dati per i moduli VV.F. (facoltativi) */
-  vvf?: ProfessionistaVvf;
 }

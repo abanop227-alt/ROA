@@ -37,7 +37,6 @@ import {
   righeTitolo,
   testoConclusioni,
 } from './catalogo';
-import { STUDIO } from '../config/studio';
 import { totaleComplessivo, zoneComputo } from './computo';
 import { formatNumero, formatQuantita, parseNumero } from './numeri';
 import type { Catalogo, Sopralluogo, Tecnico } from './types';
@@ -62,17 +61,17 @@ const M_SUP = 1560; // 2,75 cm
 const M_DX = 849; // 1,5 cm
 const M_INF = 1134; // 2 cm
 const M_SX = 1134; // 2 cm
-export const LARGHEZZA_UTILE = PAGINA_W - M_SX - M_DX; // 9923 DXA
+const LARGHEZZA_UTILE = PAGINA_W - M_SX - M_DX; // 9923 DXA
 const FONT = 'Arial';
 const CORPO = 24; // 12 pt
-export const PX_CM = 96 / 2.54;
+const PX_CM = 96 / 2.54;
 const TAB_TITOLO = 709;
 
 type Allineamento = (typeof AlignmentType)[keyof typeof AlignmentType];
 
 // ---------- stima dell'impaginazione (numeri di pagina dell'indice già compilato) ----------
 const ALTEZZA_UTILE = PAGINA_H - M_SUP - M_INF; // 14144 twip
-export const RIGA = 317; // Arial 12, interlinea 1,15
+const RIGA = 317; // Arial 12, interlinea 1,15
 const CARATTERI_RIGA = 86; // media per riga a tutta larghezza, Arial 12
 
 export interface VoceIndice {
@@ -83,7 +82,7 @@ export interface VoceIndice {
 }
 
 /** Tiene il conto approssimativo di dove cade ogni titolo: serve solo a precompilare l'indice. */
-export class Impaginazione {
+class Impaginazione {
   pagina = 1;
   y = 0;
   voci: VoceIndice[] = [];
@@ -130,17 +129,6 @@ export class Impaginazione {
 
 let imp: Impaginazione | null = null;
 
-/** Costruisce un corpo di documento tenendo il conto dell'impaginazione (serve all'indice già compilato). */
-export async function conImpaginazione<T>(costruisci: () => Promise<T> | T): Promise<{ risultato: T; stima: Impaginazione }> {
-  const stima = new Impaginazione();
-  imp = stima;
-  try {
-    return { risultato: await costruisci(), stima };
-  } finally {
-    imp = null;
-  }
-}
-
 // ---------- utilità ----------
 
 export function tipoImmagine(data: Uint8Array): 'jpg' | 'png' | null {
@@ -185,7 +173,7 @@ interface OpzPar extends OpzRun {
   keepNext?: boolean;
 }
 
-export function par(testo: string, opz: OpzPar = {}): Paragraph {
+function par(testo: string, opz: OpzPar = {}): Paragraph {
   const { after = 240, before = 0, align = AlignmentType.JUSTIFIED, left, keepNext, ...r } = opz;
   imp?.testo(testo, { left, size: r.size, before, after });
   return new Paragraph({
@@ -197,21 +185,21 @@ export function par(testo: string, opz: OpzPar = {}): Paragraph {
   });
 }
 
-export function paragrafi(testo: string, opz: OpzPar = {}): Paragraph[] {
+function paragrafi(testo: string, opz: OpzPar = {}): Paragraph[] {
   return righe(testo).map((r) => par(r, opz));
 }
 
-export function vuoto(after = 0): Paragraph {
+function vuoto(after = 0): Paragraph {
   imp?.spazio(RIGA + after);
   return new Paragraph({ spacing: { after }, children: [] });
 }
 
-export function saltoPagina(): Paragraph {
+function saltoPagina(): Paragraph {
   imp?.salto();
   return new Paragraph({ children: [new PageBreak()] });
 }
 
-export function titolo(numero: string, testo: string, livello: 1 | 2 | 3 | 4): Paragraph {
+function titolo(numero: string, testo: string, livello: 1 | 2 | 3 | 4): Paragraph {
   const heading = [HeadingLevel.HEADING_1, HeadingLevel.HEADING_2, HeadingLevel.HEADING_3, HeadingLevel.HEADING_4][livello - 1];
   imp?.titolo(numero, testo, livello);
   return new Paragraph({
@@ -270,7 +258,7 @@ function cella(
   });
 }
 
-export function bloccoFirma(tecnico: Tecnico, data: string): Table {
+function bloccoFirma(tecnico: Tecnico, data: string): Table {
   imp?.spazio(4 * RIGA);
   const w = [5462, LARGHEZZA_UTILE - 5462];
   const luogoData = `${tecnico.luogo.trim() || '[luogo]'}, ${dataItaliana(data) || '[data]'}`;
@@ -329,12 +317,12 @@ export function didascaliaFoto(numeri: number[], didascalia: string): string {
   return numeri.map((n) => `Foto ${n}`).join(' – ') + (d ? ` – ${d}${fine}` : '');
 }
 
-export interface Immagine {
+interface Immagine {
   f: FotoDati;
   tipo: 'jpg' | 'png';
 }
 
-export async function caricaImmagini(ids: string[], carica: CaricaFoto): Promise<Immagine[]> {
+async function caricaImmagini(ids: string[], carica: CaricaFoto): Promise<Immagine[]> {
   const out: Immagine[] = [];
   for (const id of ids) {
     const f = await carica(id);
@@ -367,7 +355,7 @@ export function misuraFoto(f: FotoDati, inCoppia: boolean): { width: number; hei
   return { width: Math.round(w), height: Math.round(h) };
 }
 
-export function bloccoFoto(immagini: Immagine[], numeri: number[], didascalia: string): Paragraph[] {
+function bloccoFoto(immagini: Immagine[], numeri: number[], didascalia: string): Paragraph[] {
   const out: Paragraph[] = [];
   const inCoppia = immagini.length > 1;
   for (let i = 0; i < immagini.length; i += 2) {
@@ -411,7 +399,7 @@ function frontespizio(s: Sopralluogo): Paragraph[] {
   ];
 }
 
-export async function copertina(s: Sopralluogo, carica: CaricaFoto): Promise<Paragraph[]> {
+async function copertina(s: Sopralluogo, carica: CaricaFoto): Promise<Paragraph[]> {
   if (!s.fotoCopertinaId) return [];
   const f = await carica(s.fotoCopertinaId);
   const tipo = f && tipoImmagine(f.data);
@@ -462,8 +450,7 @@ function indice(voci: VoceIndice[], primaPagina: number): (Paragraph | TableOfCo
   ];
 }
 
-/** Capitolo 1 fino alla tabella dei dati del committente (comune a ROA e prova idranti). */
-export function datiGenerali(s: Sopralluogo, tecnico: Tecnico): (Paragraph | Table)[] {
+function parteGenerale(s: Sopralluogo, tecnico: Tecnico): (Paragraph | Table)[] {
   const c = s.condominio;
   const out: (Paragraph | Table)[] = [titolo('1', 'PARTE GENERALE', 1)];
 
@@ -497,12 +484,6 @@ export function datiGenerali(s: Sopralluogo, tecnico: Tecnico): (Paragraph | Tab
       vuoto(240),
     );
   }
-  return out;
-}
-
-function parteGenerale(s: Sopralluogo, tecnico: Tecnico): (Paragraph | Table)[] {
-  const c = s.condominio;
-  const out = datiGenerali(s, tecnico);
 
   out.push(par('Lo scopo del presente elaborato consiste in:', { after: 120 }));
   if (!s.attivita.length) out.push(par('1) Verificare che lo stato di fatto sia conforme [riferimento] per attività: [attività]'));
@@ -671,9 +652,9 @@ function computo(s: Sopralluogo, catalogo: Catalogo, tecnico: Tecnico): (Paragra
   return out;
 }
 
-export function piede(s: Sopralluogo, tecnico: Tecnico, data: string = s.condominio.dataRelazione): Footer {
+function piede(s: Sopralluogo, tecnico: Tecnico): Footer {
   const sx = [tecnico.societa.trim(), s.condominio.commessa.trim() && `n°${s.condominio.commessa.trim()}`].filter(Boolean).join(' ');
-  const dx = [tecnico.iniziali.trim(), tecnico.revisione.trim(), dataItaliana(data)].filter(Boolean).join('      ');
+  const dx = [tecnico.iniziali.trim(), tecnico.revisione.trim(), dataItaliana(s.condominio.dataRelazione)].filter(Boolean).join('      ');
   return new Footer({
     children: [
       new Paragraph({
@@ -741,39 +722,14 @@ export async function creaDocumento(
   } finally {
     imp = null;
   }
-  return assemblaDocumento({
-    s,
-    tecnico,
-    titolo: `ROA ${committente(s)}`.trim(),
-    frontespizio: frontespizio(s),
-    copertina: await copertina(s, carica),
-    corpo,
-    stima,
-    opz,
-  });
-}
-
-
-export interface ParametriDocumento {
-  s: Sopralluogo;
-  tecnico: Tecnico;
-  /** titolo nelle proprietà del file */
-  titolo: string;
-  frontespizio: Paragraph[];
-  copertina: Paragraph[];
-  corpo: (Paragraph | Table)[];
-  /** impaginazione stimata del corpo (per l'indice già compilato) */
-  stima: Impaginazione;
-  opz?: OpzioniDocumento;
-  /** data nel piè di pagina (predefinita: data della relazione) */
-  dataPiede?: string;
-}
-
-/** Frontespizio, indice, corpo, stili, numerazioni e piè di pagina: uguali per ROA e prova idranti. */
-export function assemblaDocumento({ s, tecnico, titolo: titoloFile, frontespizio, copertina, corpo, stima, opz = {}, dataPiede }: ParametriDocumento): Document {
   // pagina 1 frontespizio, poi l'indice (una pagina ogni ~20 righe)
   const pagineIndice = Math.max(1, Math.ceil((stima.voci.length * (360 + RIGA) + 1200) / ALTEZZA_UTILE));
-  const children = [...frontespizio, ...copertina, ...indice(stima.voci, 2 + pagineIndice), ...corpo];
+  const children = [
+    ...frontespizio(s),
+    ...(await copertina(s, carica)),
+    ...indice(stima.voci, 2 + pagineIndice),
+    ...corpo,
+  ];
 
   // Titoli come nel modello: Arial 12; capitoli in grassetto sottolineato, attività sottolineate,
   // sezioni in corsivo. Interlinea 1,2.
@@ -815,8 +771,8 @@ export function assemblaDocumento({ s, tecnico, titolo: titoloFile, frontespizio
   const header = intestazione(opz.cartaIntestata);
 
   return new Document({
-    creator: tecnico.firma || STUDIO.prodotto,
-    title: titoloFile,
+    creator: tecnico.firma || 'ROA Antincendio',
+    title: `ROA ${committente(s)}`.trim(),
     features: { updateFields: true },
     styles: {
       default: {
@@ -886,13 +842,12 @@ export function assemblaDocumento({ s, tecnico, titolo: titoloFile, frontespizio
           },
         },
         ...(header ? { headers: { default: header } } : {}),
-        footers: { default: piede(s, tecnico, dataPiede) },
+        footers: { default: piede(s, tecnico) },
         children,
       },
     ],
   });
 }
-
 
 export async function generaDocxBlob(
   s: Sopralluogo,
@@ -904,18 +859,13 @@ export async function generaDocxBlob(
   return Packer.toBlob(await creaDocumento(s, catalogo, tecnico, carica, opz));
 }
 
-/** Parte comune dei nomi file: "Via_Linati_8_Milano" (senza accenti né simboli). */
-export function nomeBase(s: Sopralluogo): string {
+export function nomeFileDocx(s: Sopralluogo): string {
   const base = (s.condominio.nome || [s.condominio.indirizzo, s.condominio.comune].filter(Boolean).join(' ') || committente(s))
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^A-Za-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
     .slice(0, 60);
-  return base || 'sopralluogo';
-}
-
-export function nomeFileDocx(s: Sopralluogo): string {
   const data = s.condominio.dataRelazione || s.condominio.dataSopralluogo || new Date().toISOString().slice(0, 10);
-  return `ROA_${nomeBase(s)}_${data}.docx`;
+  return `ROA_${base || 'sopralluogo'}_${data}.docx`;
 }

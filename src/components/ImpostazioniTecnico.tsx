@@ -4,7 +4,6 @@ import { leggiCartaIntestata, leggiTecnico, salvaCartaIntestata, salvaTecnico } 
 import { ridimensionaFoto } from '../lib/foto';
 import type { Tecnico } from '../lib/types';
 import { AreaTesto, Campo } from './Campo';
-import ProfessionistaVvfForm from './ProfessionistaVvfForm';
 
 /** Carta intestata dello studio: immagine a pagina intera messa dietro al testo del Word. */
 function CartaIntestata() {
@@ -128,7 +127,6 @@ export default function ImpostazioniTecnico() {
         <Campo etichetta="Iniziali redattore" valore={t.iniziali} onValore={(v) => set('iniziali', v)} placeholder="es. F.D." />
         <Campo etichetta="Revisione" valore={t.revisione} onValore={(v) => set('revisione', v)} />
       </div>
-      <ProfessionistaVvfForm tecnico={t} onCambia={(v) => set('vvf', v)} />
       <CartaIntestata />
     </details>
   );

@@ -121,8 +121,8 @@ textarea {
 /* ---------- stepper ---------- */
 .stepper {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 2px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
   margin-top: 4px;
 }
 .passo {
@@ -279,106 +279,6 @@ textarea {
 }
 .promemoria span {
   flex: 1 1 200px;
-}
-
-/* ---------- controlli prima del Word ---------- */
-.controlli ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 6px;
-}
-.controlli li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 0.92rem;
-  background: var(--avviso-sfondo);
-  color: var(--avviso);
-}
-.controlli li span {
-  flex: 1 1 220px;
-}
-.controlli li.errore {
-  font-weight: 700;
-}
-.controlli .ok {
-  margin: 0;
-  font-weight: 700;
-}
-
-/* ---------- stabili ---------- */
-.risultati {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 6px;
-}
-.risultati .btn {
-  width: 100%;
-  height: auto;
-  padding: 8px 12px;
-  display: grid;
-  gap: 2px;
-  text-align: left;
-}
-.lista-file {
-  list-style: none;
-  margin: 0 0 8px;
-  padding: 0;
-  display: grid;
-  gap: 6px;
-}
-.lista-file li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-/* ---------- elenco pratiche ---------- */
-.filtri {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.badge-riga {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.stato-eseguiti,
-.stato-presentata {
-  background: #d7f0d9;
-  color: #1b5e20;
-}
-
-/* ---------- prova idranti ---------- */
-.misura {
-  border-bottom: 1px solid var(--bordo);
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-}
-.esito-prova.positivo {
-  border-color: #2e7d32;
-}
-.esito-prova.negativo {
-  border-color: var(--pericolo);
-}
-.esito-prova .esito-testo {
-  font-weight: 800;
-  margin: 8px 0 0;
-}
-.esito-prova.negativo .esito-testo {
-  color: var(--pericolo);
-}
-.genera-idranti {
-  margin-top: 8px;
 }
 
 /* ---------- pulsanti ---------- */

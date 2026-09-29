@@ -117,18 +117,6 @@
               ]
             },
             {
-              "id": "74-ct-controsoffitto",
-              "titolo": "Controsoffitto REI/EI 120 del locale",
-              "testo": "Per garantire la compartimentazione completa della centrale termica, dovrà essere installato un controsoffitto avente caratteristiche REI / EI 120, in aderenza al soffitto esistente. Il tutto dovrà essere documentato con certificati di conformità dei materiali impiegati e dichiarazione di corretta posa.",
-              "didascalia": "Soffitto attuale della centrale termica.",
-              "lavorazioni": [
-                {
-                  "descrizione": "Fornitura e posa controsoffitto REI / EI 120 in aderenza al soffitto della centrale termica.",
-                  "um": "mq"
-                }
-              ]
-            },
-            {
               "id": "74-ct-canna-disimpegno",
               "titolo": "Canna fumaria nel disimpegno (EI 60)",
               "testo": "La canna fumaria per lo smaltimento dei fumi della combustione attraversa la muratura di delimitazione con il locale disimpegno, per poi svilupparsi all’interno dello stesso, prima di collegarsi al ramo verticale che sfocia in copertura. Tale tubazione dovrà necessariamente possedere caratteristiche di resistenza al fuoco non inferiori a EI 60 all’interno del disimpegno. Non essendo, ad oggi, in possesso di alcuna documentazione che possa testimoniare le sue caratteristiche se ne prescrive preventivamente la compartimentazione. Alternativamente si potrebbe posare in opera un tratto in materiale plastico (ove possibile) nella sola porzione di condotto in attraversamento della muratura di delimitazione tra centrale termica e disimpegno, installando appositi collari antincendio sulla porzione plastica, all’interno di entrambi i locali.",
@@ -471,10 +459,6 @@
       "introduzione": "L’autorimessa oggetto di relazione si sviluppa su [un unico piano a quota – x,xx m al di sotto della quota stradale]. La stessa ha una superficie di compartimento pari a [valore] mq, con capacità ricettiva totale pari a n° [numero] autovetture, suddivise in n° [numero] box e n° [numero] posti auto.",
       "regoleTecniche": [
         {
-          "etichetta": "D.M. 01/02/1986",
-          "testo": "“Norme di sicurezza antincendio per la costruzione e l’esercizio di autorimesse e simili” – D.M. 01/02/1986."
-        },
-        {
           "etichetta": "D.M. 03/08/2015 e s.m.i.",
           "testo": "“Norme di sicurezza antincendio per la costruzione e l’esercizio di autorimesse e simili” ai sensi della specifica regola tecnica – Capitolo V6 – D.M. 03/08/2015 e s.m.i."
         }
@@ -537,18 +521,6 @@
                 {
                   "descrizione": "Fornitura e posa porte con resistenza al fuoco non inferiori a REI [60] (dimensioni [0,80 x 2,00] m), compresa assistenza muraria.",
                   "um": "cad"
-                }
-              ]
-            },
-            {
-              "id": "75-fv-aerazione-ostruita",
-              "titolo": "Aerazione del filtro ostruita",
-              "testo": "Si ricorda di mantenere libera l’aerazione del filtro, evitando qualsiasi ostruzione, al fine di assicurare il rispetto delle condizioni di sicurezza e di conformità normativa.",
-              "didascalia": "Aerazione ostruita.",
-              "lavorazioni": [
-                {
-                  "descrizione": "Rimozione ostruzione dell’aerazione del filtro vano scala [B].",
-                  "um": "a corpo"
                 }
               ]
             },
@@ -649,18 +621,6 @@
           "id": "75-ar",
           "titolo": "Autorimessa",
           "voci": [
-            {
-              "id": "75-ar-griglia-ascensore",
-              "titolo": "Griglia di aerazione del locale ascensore sul corsello",
-              "testo": "I locali macchine ascensore sono provvisti di una griglia di aerazione sfociante nel corsello. Al fine di garantire la corretta compartimentazione dell’autorimessa sarà necessario provvedere alla sostituzione della stessa con griglia antincendio avente le medesime dimensioni, ovvero provvedere alla sua completa chiusura con materiale avente resistenza al fuoco non inferiore a REI 120.",
-              "didascalia": "Aerazione sfociante sul corsello.",
-              "lavorazioni": [
-                {
-                  "descrizione": "Fornitura e posa griglia antincendio [Scala A], dimensioni [43x26] cm, compresa assistenza muraria.",
-                  "um": "cad"
-                }
-              ]
-            },
             {
               "id": "75-ar-griglie",
               "titolo": "Griglie di aerazione presenti",
@@ -1003,10 +963,6 @@
         {
           "etichetta": "D.M. 16/05/1987 n° 246",
           "testo": "Approvazione della regola tecnica di prevenzione incendi per la progettazione, la costruzione di “edifici civili aventi altezza antincendio > di 24 m.” D.M. 16/05/1987 n°246."
-        },
-        {
-          "etichetta": "D.M. 25/01/2019",
-          "testo": "“Modifiche ed integrazioni all’allegato del decreto 16/05/1987, n. 246 concernente norme di sicurezza antincendi per gli edifici di civile abitazione” – D.M. 25/01/2019."
         }
       ],
       "sezioni": [
@@ -1429,10 +1385,6 @@
     },
     {
       "descrizione": "Tinteggiature aree oggetto d’intervento.",
-      "um": "a corpo"
-    },
-    {
-      "descrizione": "Apprestamento di cantiere, copertura a protezione dell’impianto termico, formazione piani di lavoro e pulizia finale.",
       "um": "a corpo"
     }
   ],

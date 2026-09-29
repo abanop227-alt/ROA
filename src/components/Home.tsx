@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { STUDIO } from '../config/studio';
 import { esportaBackup, importaBackup } from '../lib/backup';
 import { migraSopralluogo, nuovoSopralluogo, titoloBreve, validaCatalogo, vociSelezionate } from '../lib/catalogo';
 import { scarica } from '../lib/condividi';
@@ -12,14 +11,10 @@ import {
 } from '../lib/db';
 import type { Catalogo, Sopralluogo } from '../lib/types';
 import ImpostazioniTecnico from './ImpostazioniTecnico';
-import ElencoLavoriResoconti from './ElencoLavoriResoconti';
-import ImportaStabili from './ImportaStabili';
 import Sincronizzazione from './Sincronizzazione';
 import { programmaSync, type StatoAutoSync } from '../lib/autosync';
-import { leggiConfigSync, registraEliminazione } from '../lib/sync';
+import { registraEliminazione } from '../lib/sync';
 import { dataItaliana, oggiISO } from '../lib/util';
-import { NOME_STATO, STATI, TIPI, conStato, motivoSciaBloccata, nomeStato, nuovaPraticaDa, praticaDi, praticaVuota, puoCreareScia } from '../lib/pratiche';
-import type { StatoPratica, TipoPratica } from '../lib/types';
 
 interface Props {
   catalogo: Catalogo;
@@ -32,8 +27,6 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
   const [elenco, setElenco] = useState<Sopralluogo[] | null>(null);
   const [messaggio, setMessaggio] = useState<string | null>(null);
   const [menuAperto, setMenuAperto] = useState<string | null>(null);
-  const [filtro, setFiltro] = useState<'tutti' | TipoPratica>('tutti');
-  const [cerca, setCerca] = useState('');
   const inputBackup = useRef<HTMLInputElement>(null);
   const inputLibreria = useRef<HTMLInputElement>(null);
 
@@ -54,24 +47,8 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
 
   async function nuovo() {
     const s = nuovoSopralluogo();
-    const nome = (await leggiConfigSync().catch(() => undefined))?.nome?.trim();
-    if (nome) s.pratica = { ...praticaVuota('roa'), referente: nome };
     await salvaSopralluogo(s);
     onApri(s.id);
-  }
-
-  async function creaDa(s: Sopralluogo, tipo: 'scia' | 'rinnovo') {
-    setMenuAperto(null);
-    const nuova = nuovaPraticaDa(s, tipo);
-    await salvaSopralluogo(nuova);
-    programmaSync(1000);
-    onApri(nuova.id);
-  }
-
-  async function cambiaStato(s: Sopralluogo, stato: StatoPratica) {
-    await salvaSopralluogo({ ...conStato(s, stato), modificato: Date.now() });
-    programmaSync(1000);
-    await ricarica();
   }
 
   async function duplica(id: string) {
@@ -136,7 +113,7 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
       <header className="appbar">
         <div className="appbar-riga">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="logo" />
-          <h1>{STUDIO.prodotto}</h1>
+          <h1>ROA Antincendio</h1>
         </div>
       </header>
 
@@ -157,33 +134,14 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
         <h2 className="titolo-sezione">Sopralluoghi</h2>
         {elenco === null && <p className="muto">Caricamento…</p>}
         {elenco?.length === 0 && <p className="muto">Nessun sopralluogo salvato. Inizia con “Nuovo sopralluogo”.</p>}
-        {!!elenco?.length && (
-          <div className="filtri">
-            <div className="segmentato" role="radiogroup" aria-label="Tipo di pratica">
-              {(['tutti', 'roa', 'scia', 'rinnovo'] as const).map((t) => (
-                <button key={t} role="radio" aria-checked={filtro === t} className={filtro === t ? 'attivo' : ''} onClick={() => setFiltro(t)}>
-                  {t === 'tutti' ? 'Tutte' : TIPI[t]}
-                </button>
-              ))}
-            </div>
-            <input type="search" value={cerca} onChange={(e) => setCerca(e.target.value)} placeholder="Cerca indirizzo, amministrazione, commessa…" aria-label="Cerca" />
-          </div>
-        )}
         <ul className="lista-sopralluoghi">
-          {elenco?.filter((s) => corrisponde(s, filtro, cerca)).map((s) => {
+          {elenco?.map((s) => {
             const sel = vociSelezionate(s);
             const foto = sel.reduce((n, v) => n + v.fotoIds.length, 0);
-            const pr = praticaDi(s);
             return (
               <li key={s.id} className="card sopralluogo">
                 <button className="sopralluogo-apri" onClick={() => onApri(s.id)}>
                   <strong>{titoloBreve(s) || 'Nuovo sopralluogo'}</strong>
-                  <span className="badge-riga">
-                    <span className={`badge stato-${pr.stato}`}>
-                      {TIPI[pr.tipo]} · {nomeStato(pr)}
-                    </span>
-                    {pr.referente && <span className="badge">{pr.referente}</span>}
-                  </span>
                   <span className="muto">{s.condominio.pressoAmministrazione || 'Amministrazione non indicata'}</span>
                   <span className="meta">
                     {dataItaliana(s.condominio.dataSopralluogo)}
@@ -204,27 +162,6 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
                     <button className="btn" onClick={() => onApri(s.id)}>
                       Apri
                     </button>
-                    <label className="campo">
-                      <span className="campo-etichetta">Stato</span>
-                      <select value={pr.stato} onChange={(e) => cambiaStato(s, e.target.value as StatoPratica)}>
-                        {STATI[pr.tipo].map((st) => (
-                          <option key={st} value={st}>
-                            {NOME_STATO[pr.tipo][st]}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    {pr.tipo === 'roa' && (
-                      <>
-                        <button className="btn" onClick={() => creaDa(s, 'scia')} disabled={!puoCreareScia(s)} title={motivoSciaBloccata(s) ?? undefined}>
-                          Crea SCIA
-                        </button>
-                        {!puoCreareScia(s) && <span className="muto piccolo">{motivoSciaBloccata(s)}</span>}
-                        <button className="btn" onClick={() => creaDa(s, 'rinnovo')}>
-                          Crea rinnovo
-                        </button>
-                      </>
-                    )}
                     <button className="btn" onClick={() => duplica(s.id)}>
                       Duplica
                     </button>
@@ -242,10 +179,6 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
         </ul>
 
         <Sincronizzazione />
-
-        <ImportaStabili />
-
-        <ElencoLavoriResoconti />
 
         <ImpostazioniTecnico />
 
@@ -313,12 +246,4 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
       </main>
     </div>
   );
-}
-
-function corrisponde(s: Sopralluogo, filtro: 'tutti' | TipoPratica, cerca: string): boolean {
-  if (filtro !== 'tutti' && praticaDi(s).tipo !== filtro) return false;
-  const q = cerca.trim().toLowerCase();
-  if (!q) return true;
-  const c = s.condominio;
-  return [c.nome, c.indirizzo, c.comune, c.pressoAmministrazione, c.commessa, praticaDi(s).referente].some((t) => t.toLowerCase().includes(q));
 }
