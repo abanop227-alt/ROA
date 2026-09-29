@@ -217,7 +217,7 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
 
       <main className="contenuto con-barra">
         {corrente === 'attivita' && <Step1Attivita s={s} catalogo={catalogo} aggiorna={aggiorna} />}
-        {corrente === 'condominio' && <Step2Condominio s={s} aggiorna={aggiorna} />}
+        {corrente === 'condominio' && <Step2Condominio s={s} catalogo={catalogo} aggiorna={aggiorna} />}
         {corrente === 'voci' && (
           <Step3Voci s={s} catalogo={catalogo} tab={tab} aggiorna={aggiorna} onVaiAttivita={() => onPasso(0)} />
         )}

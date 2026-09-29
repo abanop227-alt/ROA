@@ -12,6 +12,7 @@ import {
 } from '../lib/db';
 import type { Catalogo, Sopralluogo } from '../lib/types';
 import ImpostazioniTecnico from './ImpostazioniTecnico';
+import ImportaStabili from './ImportaStabili';
 import Sincronizzazione from './Sincronizzazione';
 import { programmaSync, type StatoAutoSync } from '../lib/autosync';
 import { leggiConfigSync, registraEliminazione } from '../lib/sync';
@@ -240,6 +241,8 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
         </ul>
 
         <Sincronizzazione />
+
+        <ImportaStabili />
 
         <ImpostazioniTecnico />
 

@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import type { Stabile } from './stabili';
 import type { Catalogo, FotoRecord, Sopralluogo, Tecnico } from './types';
 import { tecnicoVuoto } from './catalogo';
 import { nuovoId } from './util';
@@ -7,18 +8,25 @@ interface RoaDB extends DBSchema {
   sopralluoghi: { key: string; value: Sopralluogo };
   foto: { key: string; value: FotoRecord; indexes: { sopralluogoId: string } };
   impostazioni: { key: string; value: unknown };
+  stabili: { key: string; value: Stabile; indexes: { origine: string } };
 }
 
 let dbPromise: Promise<IDBPDatabase<RoaDB>> | null = null;
 
 export function db(): Promise<IDBPDatabase<RoaDB>> {
   if (!dbPromise) {
-    dbPromise = openDB<RoaDB>('roa-antincendio', 1, {
-      upgrade(d) {
-        d.createObjectStore('sopralluoghi', { keyPath: 'id' });
-        const foto = d.createObjectStore('foto', { keyPath: 'id' });
-        foto.createIndex('sopralluogoId', 'sopralluogoId');
-        d.createObjectStore('impostazioni');
+    dbPromise = openDB<RoaDB>('roa-antincendio', 2, {
+      upgrade(d, versionePrecedente) {
+        if (versionePrecedente < 1) {
+          d.createObjectStore('sopralluoghi', { keyPath: 'id' });
+          const foto = d.createObjectStore('foto', { keyPath: 'id' });
+          foto.createIndex('sopralluogoId', 'sopralluogoId');
+          d.createObjectStore('impostazioni');
+        }
+        if (versionePrecedente < 2) {
+          const st = d.createObjectStore('stabili', { keyPath: 'id' });
+          st.createIndex('origine', 'origine');
+        }
       },
     });
   }
@@ -158,4 +166,24 @@ export async function salvaCartaIntestata(c: CartaIntestata | null): Promise<voi
   const d = await db();
   if (c) await d.put('impostazioni', c, 'cartaIntestata');
   else await d.delete('impostazioni', 'cartaIntestata');
+}
+
+// ---- stabili (anagrafica importata dagli Excel, solo su questo dispositivo) ----
+
+export async function elencaStabili(): Promise<Stabile[]> {
+  return (await db()).getAll('stabili');
+}
+
+/** Sostituisce gli stabili importati dallo stesso file (reimportare un elenco aggiornato non crea doppioni). */
+export async function importaStabiliDb(nuovi: Stabile[], origine: string): Promise<void> {
+  const tx = (await db()).transaction('stabili', 'readwrite');
+  for await (const cur of tx.store.index('origine').iterate(origine)) await cur.delete();
+  for (const s of nuovi) await tx.store.put(s);
+  await tx.done;
+}
+
+export async function eliminaStabiliDi(origine: string): Promise<void> {
+  const tx = (await db()).transaction('stabili', 'readwrite');
+  for await (const cur of tx.store.index('origine').iterate(origine)) await cur.delete();
+  await tx.done;
 }
