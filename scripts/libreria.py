@@ -55,6 +55,10 @@ f74 = {
         "Il progetto approvato dai VV.F. prevedeva che le murature di delimitazione tra i locali [centrale termica, disimpegno e cantina condominiale] avrebbero avuto caratteristiche di resistenza al fuoco non inferiori a REI 120 ed il professionista incaricato all’epoca precisava nella relazione progettuale che tali murature sarebbero state realizzate con [blocchetti di cemento prefabbricato certificati REI 120]. Ebbene, se non fosse possibile reperire idonea documentazione a riguardo, le caratteristiche odierne delle murature (spessore di circa [10] cm) non permetterebbero al sottoscritto di poterle certificare, secondo il metodo tabellare, con caratteristiche REI 120. Sarà dunque necessario, in questo caso, provvedere alla posa in opera di idoneo cartongesso antincendio, in aderenza alle murature stesse, da terra a plafone, in modo tale da garantire la prescritta resistenza al fuoco delle murature.",
         "Murature di separazione tra i locali.",
         [L("Fornitura e posa cartongesso REI 120 in aderenza alle pareti tra [locale caldaia, disimpegno e cantine] (interno al locale caldaia).", "mq")]),
+      V("74-ct-controsoffitto", "Controsoffitto REI/EI 120 del locale",
+        "Per garantire la compartimentazione completa della centrale termica, dovrà essere installato un controsoffitto avente caratteristiche REI / EI 120, in aderenza al soffitto esistente. Il tutto dovrà essere documentato con certificati di conformità dei materiali impiegati e dichiarazione di corretta posa.",
+        "Soffitto attuale della centrale termica.",
+        [L("Fornitura e posa controsoffitto REI / EI 120 in aderenza al soffitto della centrale termica.", "mq")]),
       V("74-ct-canna-disimpegno", "Canna fumaria nel disimpegno (EI 60)",
         "La canna fumaria per lo smaltimento dei fumi della combustione attraversa la muratura di delimitazione con il locale disimpegno, per poi svilupparsi all’interno dello stesso, prima di collegarsi al ramo verticale che sfocia in copertura. Tale tubazione dovrà necessariamente possedere caratteristiche di resistenza al fuoco non inferiori a EI 60 all’interno del disimpegno. Non essendo, ad oggi, in possesso di alcuna documentazione che possa testimoniare le sue caratteristiche se ne prescrive preventivamente la compartimentazione. Alternativamente si potrebbe posare in opera un tratto in materiale plastico (ove possibile) nella sola porzione di condotto in attraversamento della muratura di delimitazione tra centrale termica e disimpegno, installando appositi collari antincendio sulla porzione plastica, all’interno di entrambi i locali.",
         "Canna fumaria.",
@@ -162,6 +166,7 @@ f77 = {
   "modelloScopo": "Edifici destinati ad uso civile con altezza antincendio pari a {dato} m",
   "regoleTecniche": [
     {"etichetta": "D.M. 16/05/1987 n° 246", "testo": "Approvazione della regola tecnica di prevenzione incendi per la progettazione, la costruzione di “edifici civili aventi altezza antincendio > di 24 m.” D.M. 16/05/1987 n°246."},
+    {"etichetta": "D.M. 25/01/2019", "testo": "“Modifiche ed integrazioni all’allegato del decreto 16/05/1987, n. 246 concernente norme di sicurezza antincendi per gli edifici di civile abitazione” – D.M. 25/01/2019."},
   ],
   "sezioni": [
     {"id": "77-vs", "titolo": "Vano scala", "voci": [
@@ -286,6 +291,7 @@ f75 = {
   "modelloScopo": "Autorimessa privata, con superficie pari a {dato} mq",
   "introduzione": "L’autorimessa oggetto di relazione si sviluppa su [un unico piano a quota – x,xx m al di sotto della quota stradale]. La stessa ha una superficie di compartimento pari a [valore] mq, con capacità ricettiva totale pari a n° [numero] autovetture, suddivise in n° [numero] box e n° [numero] posti auto.",
   "regoleTecniche": [
+    {"etichetta": "D.M. 01/02/1986", "testo": "“Norme di sicurezza antincendio per la costruzione e l’esercizio di autorimesse e simili” – D.M. 01/02/1986."},
     {"etichetta": "D.M. 03/08/2015 e s.m.i.", "testo": "“Norme di sicurezza antincendio per la costruzione e l’esercizio di autorimesse e simili” ai sensi della specifica regola tecnica – Capitolo V6 – D.M. 03/08/2015 e s.m.i."},
   ],
   "sezioni": [
@@ -302,6 +308,10 @@ f75 = {
       V("75-fv-porta-verniciata", "Porta REI verniciata (guaina coperta)",
         "Al momento del sopralluogo la porta di collegamento tra [il corsello ed il vano scala C], sebbene fosse REI e costantemente revisionata da parte della ditta manutentrice non sembrava essere in ottimo stato.\nLa porta è stata verniciata con una pittura che ha coperto la guaina termo-espandente, non garantendone più le prestazioni di reazione al fuoco ed ha inoltre cancellato le informazioni del produttore per poter risalire alle dichiarazioni di conformità.\nSi provveda pertanto alla sostituzione della stessa con un modello simile avente caratteristiche di resistenza al fuoco non inferiori a REI [60].",
         "Porta di accesso al filtro – vano scala [C].", [RIM_PORTE, PORTA_REI]),
+      V("75-fv-aerazione-ostruita", "Aerazione del filtro ostruita",
+        "Si ricorda di mantenere libera l’aerazione del filtro, evitando qualsiasi ostruzione, al fine di assicurare il rispetto delle condizioni di sicurezza e di conformità normativa.",
+        "Aerazione ostruita.",
+        [L("Rimozione ostruzione dell’aerazione del filtro vano scala [B].", "a corpo")]),
       V("75-fv-porta-locale", "Porta di locale tecnico interna al filtro",
         "La porta di accesso al [locale contatori], essendo all’interno del filtro da realizzare dovrà essere sostituita con modello avente caratteristiche di resistenza al fuoco non inferiori a REI [60].",
         "Porta di accesso al [locale contatori].", [RIM_PORTE, PORTA_REI]),
@@ -327,6 +337,10 @@ f75 = {
          L("Fornitura e posa di griglia termo – espandente per l’aerazione del locale macchine ascensore (dimensioni [0,95 m x 0,50 m]), compresa assistenza muraria.", "a corpo")]),
     ]},
     {"id": "75-ar", "titolo": "Autorimessa", "voci": [
+      V("75-ar-griglia-ascensore", "Griglia di aerazione del locale ascensore sul corsello",
+        "I locali macchine ascensore sono provvisti di una griglia di aerazione sfociante nel corsello. Al fine di garantire la corretta compartimentazione dell’autorimessa sarà necessario provvedere alla sostituzione della stessa con griglia antincendio avente le medesime dimensioni, ovvero provvedere alla sua completa chiusura con materiale avente resistenza al fuoco non inferiore a REI 120.",
+        "Aerazione sfociante sul corsello.",
+        [L("Fornitura e posa griglia antincendio [Scala A], dimensioni [43x26] cm, compresa assistenza muraria.", "cad")]),
       V("75-ar-griglie", "Griglie di aerazione presenti",
         "È stata accertata la presenza delle griglie di aerazione dell’autorimessa come previsto dalla normativa vigente.",
         "Griglie di aerazione."),
@@ -443,6 +457,7 @@ libreria = {
     L("Fornitura e posa maniglione antipanico su uscita di emergenza.", "a corpo"),
     L("Fornitura e posa estintore in polvere da 6 KG.", "cad"),
     L("Tinteggiature aree oggetto d’intervento.", "a corpo"),
+    L("Apprestamento di cantiere, copertura a protezione dell’impianto termico, formazione piani di lavoro e pulizia finale.", "a corpo"),
   ],
   "cartelliSuggeriti": [
     "cartelli da applicare in tutti i piani [dall’ottavo al piano rialzato]",

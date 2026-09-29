@@ -56,7 +56,10 @@ export default function FotoVoce({ sopralluogoId, fotoIds, onAggiunte, onRimossa
 
   async function aggiungi(files: FileList | null) {
     if (!files?.length) return;
-    const lista = Array.from(files).slice(0, singola ? 1 : undefined);
+    // in ordine di scatto (data del file, poi nome: le fotocamere numerano DSC0001, DSC0002…)
+    const lista = Array.from(files)
+      .sort((a, b) => a.lastModified - b.lastModified || a.name.localeCompare(b.name, undefined, { numeric: true }))
+      .slice(0, singola ? 1 : undefined);
     setErrore(null);
     setInCorso(lista.length);
     const ids: string[] = [];
