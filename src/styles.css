@@ -121,8 +121,8 @@ textarea {
 /* ---------- stepper ---------- */
 .stepper {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
   margin-top: 4px;
 }
 .passo {
@@ -309,6 +309,29 @@ textarea {
 .controlli .ok {
   margin: 0;
   font-weight: 700;
+}
+
+/* ---------- prova idranti ---------- */
+.misura {
+  border-bottom: 1px solid var(--bordo);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+.esito-prova.positivo {
+  border-color: #2e7d32;
+}
+.esito-prova.negativo {
+  border-color: var(--pericolo);
+}
+.esito-prova .esito-testo {
+  font-weight: 800;
+  margin: 8px 0 0;
+}
+.esito-prova.negativo .esito-testo {
+  color: var(--pericolo);
+}
+.genera-idranti {
+  margin-top: 8px;
 }
 
 /* ---------- pulsanti ---------- */

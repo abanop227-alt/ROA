@@ -8,8 +8,9 @@ import Step1Attivita from './Step1Attivita';
 import Step2Condominio from './Step2Condominio';
 import Step3Voci, { TabsAttivita, CARTELLI } from './Step3Voci';
 import Step4Riepilogo from './Step4Riepilogo';
+import StepIdranti from './StepIdranti';
 
-const PASSI = ['Attività', 'Condominio', 'Voci', 'Riepilogo'];
+const PASSI = ['Attività', 'Condominio', 'Voci', 'Idranti', 'Riepilogo'];
 
 type StatoSalvataggio = 'salvato' | 'modificato' | 'errore';
 
@@ -32,6 +33,8 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
   const [tab, setTab] = useState<string>('');
   const [generazione, setGenerazione] = useState<'no' | 'in-corso'>('no');
   const [doc, setDoc] = useState<DocGenerato | null>(null);
+  const [docIdranti, setDocIdranti] = useState<DocGenerato | null>(null);
+  const [generazioneIdranti, setGenerazioneIdranti] = useState(false);
   const [erroreDoc, setErroreDoc] = useState<string | null>(null);
   const daSalvare = useRef<Sopralluogo | null>(null);
   const timer = useRef<number | undefined>(undefined);
@@ -77,6 +80,7 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
       });
       setStato('modificato');
       setDoc(null);
+      setDocIdranti(null);
       window.clearTimeout(timer.current);
       timer.current = window.setTimeout(salvaOra, 400);
     },
@@ -108,31 +112,28 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
     window.scrollTo({ top: 0 });
   }, [passo]);
 
-  async function generaWord() {
+  /** Genera un Word (ROA o prova idranti), lo scarica o lo condivide dal telefono. */
+  async function generaDocumento(tipo: 'roa' | 'idranti') {
     if (!s) return;
-    setGenerazione('in-corso');
+    const idranti = tipo === 'idranti';
+    (idranti ? setGenerazioneIdranti : (v: boolean) => setGenerazione(v ? 'in-corso' : 'no'))(true);
     setErroreDoc(null);
     try {
       await salvaOra();
-      const { generaDocxBlob, nomeFileDocx } = await import('../lib/docx');
+      const [{ generaDocxBlob, nomeFileDocx }, { generaDocxIdrantiBlob, nomeFileIdranti }] = await Promise.all([import('../lib/docx'), import('../lib/docxIdranti')]);
       const tecnico = await leggiTecnico();
       const carta = await leggiCartaIntestata().catch(() => undefined);
       const cartaIntestata = carta
         ? { data: new Uint8Array(await carta.blob.arrayBuffer()), width: carta.width, height: carta.height }
         : null;
-      const blob = await generaDocxBlob(
-        s,
-        catalogo,
-        tecnico,
-        async (fid) => {
-          const f = await leggiFoto(fid);
-          return f ? { data: new Uint8Array(await f.blob.arrayBuffer()), width: f.width, height: f.height } : null;
-        },
-        { cartaIntestata },
-      );
-      const file = fileDaBlob(blob, nomeFileDocx(s));
+      const caricaFoto = async (fid: string) => {
+        const f = await leggiFoto(fid);
+        return f ? { data: new Uint8Array(await f.blob.arrayBuffer()), width: f.width, height: f.height } : null;
+      };
+      const blob = await (idranti ? generaDocxIdrantiBlob : generaDocxBlob)(s, catalogo, tecnico, caricaFoto, { cartaIntestata });
+      const file = fileDaBlob(blob, idranti ? nomeFileIdranti(s) : nomeFileDocx(s));
       const condivisibile = isMobile() && puoCondividere(file);
-      setDoc({ file, condivisibile });
+      (idranti ? setDocIdranti : setDoc)({ file, condivisibile });
       if (condivisibile) {
         try {
           await condividi(file, file.name);
@@ -146,9 +147,10 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
       console.error(e);
       setErroreDoc(`Errore nella generazione del documento: ${(e as Error).message}`);
     } finally {
-      setGenerazione('no');
+      (idranti ? setGenerazioneIdranti : (v: boolean) => setGenerazione(v ? 'in-corso' : 'no'))(false);
     }
   }
+  const generaWord = () => generaDocumento('roa');
 
   if (s === undefined) return <div className="caricamento">Caricamento…</div>;
   if (s === null) {
@@ -198,7 +200,8 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
         {passo === 2 && (
           <Step3Voci s={s} catalogo={catalogo} tab={tab} aggiorna={aggiorna} onVaiAttivita={() => onPasso(0)} />
         )}
-        {passo === 3 && (
+        {passo === 3 && <StepIdranti s={s} aggiorna={aggiorna} />}
+        {passo === 4 && (
           <Step4Riepilogo
             s={s}
             catalogo={catalogo}
@@ -210,6 +213,9 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
             onCondividi={() => doc && condividi(doc.file, doc.file.name).catch((e) => setErroreDoc(String(e)))}
             onScarica={() => doc && scarica(doc.file, doc.file.name)}
             onVaiPasso={onPasso}
+            onGeneraIdranti={() => generaDocumento('idranti')}
+            generazioneIdranti={generazioneIdranti}
+            docIdranti={docIdranti}
           />
         )}
       </main>

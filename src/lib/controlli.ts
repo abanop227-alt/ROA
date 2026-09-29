@@ -1,4 +1,5 @@
 import { contaSegnaposto, vociSelezionate } from './catalogo';
+import { valutaProva } from './idranti';
 import type { Sopralluogo } from './types';
 
 export type LivelloControllo = 'errore' | 'avviso';
@@ -6,7 +7,7 @@ export type LivelloControllo = 'errore' | 'avviso';
 export interface Controllo {
   livello: LivelloControllo;
   testo: string;
-  /** passo dell'app (0 Attività, 1 Condominio, 2 Voci) in cui si corregge */
+  /** passo dell'app (0 Attività, 1 Condominio, 2 Voci, 3 Idranti) in cui si corregge */
   passo?: number;
 }
 
@@ -62,6 +63,15 @@ export function controlliPreGenerazione(s: Sopralluogo): Controllo[] {
   const senzaTesto = voci.filter((v) => !v.testo.trim());
   if (senzaTesto.length) {
     out.push({ livello: 'errore', testo: `Frasi senza testo: ${senzaTesto.map((v) => v.titolo).join('; ')}.`, passo: 2 });
+  }
+
+  const pi = s.provaIdranti;
+  if (pi?.attiva) {
+    const v = valutaProva(pi);
+    if (v.esito === 'incompleto') out.push({ livello: 'avviso', testo: 'Prova idranti: mancano le pressioni per calcolare la portata.', passo: 3 });
+    if (v.esito === 'negativo') out.push({ livello: 'avviso', testo: 'Prova idranti con esito negativo: valuta se aggiungere la verifica dell’impianto alle voci della ROA.', passo: 3 });
+    for (const a of v.avvisi) out.push({ livello: 'avviso', testo: `Prova idranti: ${a}`, passo: 3 });
+    if (!pi.fotoProvaIds.length && !pi.fotoRapportoIds.length) out.push({ livello: 'avviso', testo: 'Prova idranti: nessuna foto della prova.', passo: 3 });
   }
 
   return out;

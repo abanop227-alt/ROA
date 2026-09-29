@@ -12,7 +12,7 @@ export interface Rotta {
 
 function leggiRotta(): Rotta {
   const m = /^#\/s\/([^/]+)(?:\/(\d))?/.exec(location.hash);
-  return m ? { id: decodeURIComponent(m[1]), passo: Math.min(3, Math.max(0, Number(m[2] ?? 0))) } : { id: null, passo: 0 };
+  return m ? { id: decodeURIComponent(m[1]), passo: Math.min(4, Math.max(0, Number(m[2] ?? 0))) } : { id: null, passo: 0 };
 }
 
 export function vaiA(r: Rotta, sostituisci = false): void {

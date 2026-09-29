@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { nonAggravioEffettivo, nuovaRigaExtra, testoConclusioni, vociSelezionate } from '../lib/catalogo';
 import { totaleComplessivo, zoneComputo, type RigaCalcolata } from '../lib/computo';
 import { controlliPreGenerazione } from '../lib/controlli';
-import { scarica } from '../lib/condividi';
+import { condividi, scarica } from '../lib/condividi';
 import { applicaPrezzi, esportaComputoXlsx, leggiPrezziXlsx, nomeFileComputo } from '../lib/computoXlsx';
 import { formatNumero } from '../lib/numeri';
 import type { Catalogo, RigaComputo, Sopralluogo } from '../lib/types';
@@ -20,6 +20,9 @@ interface Props {
   onCondividi: () => void;
   onScarica: () => void;
   onVaiPasso?: (passo: number) => void;
+  onGeneraIdranti?: () => void;
+  generazioneIdranti?: boolean;
+  docIdranti?: DocGenerato | null;
 }
 
 export default function Step4Riepilogo(p: Props) {
@@ -311,6 +314,31 @@ export default function Step4Riepilogo(p: Props) {
                 Scarica
               </button>
             </div>
+          </div>
+        )}
+        {s.provaIdranti?.attiva && (
+          <div className="genera-idranti">
+            <h3 className="titolo-sezione">Prova idranti</h3>
+            <button className="btn btn-grande btn-blocco" onClick={p.onGeneraIdranti} disabled={p.generazioneIdranti}>
+              {p.generazioneIdranti ? 'Generazione in corso…' : 'Genera Word prova idranti'}
+            </button>
+            {p.docIdranti && (
+              <div className="card doc-pronto">
+                <p>
+                  ✓ Documento pronto: <b>{p.docIdranti.file.name}</b>
+                </p>
+                <div className="riga-pulsanti">
+                  {p.docIdranti.condivisibile && (
+                    <button className="btn btn-primario btn-grande" onClick={() => p.docIdranti && condividi(p.docIdranti.file, p.docIdranti.file.name).catch(() => undefined)}>
+                      Condividi…
+                    </button>
+                  )}
+                  <button className="btn btn-grande" onClick={() => p.docIdranti && scarica(p.docIdranti.file, p.docIdranti.file.name)}>
+                    Scarica
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
