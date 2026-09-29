@@ -25,6 +25,12 @@ export function db(): Promise<IDBPDatabase<RoaDB>> {
   return dbPromise;
 }
 
+/** Chiude la connessione (usato nei test per simulare un altro dispositivo). */
+export async function chiudiDb(): Promise<void> {
+  if (dbPromise) (await dbPromise).close();
+  dbPromise = null;
+}
+
 /** Chiede al browser di non cancellare i dati in caso di poco spazio (importante su iPhone). */
 export async function richiediArchivioPersistente(): Promise<void> {
   try {

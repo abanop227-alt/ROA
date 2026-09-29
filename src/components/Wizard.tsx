@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { migraSopralluogo, sincronizza, titoloBreve } from '../lib/catalogo';
 import { condividi, fileDaBlob, isMobile, puoCondividere, scarica } from '../lib/condividi';
+import { impostaAperto, programmaSync } from '../lib/autosync';
 import { leggiCartaIntestata, leggiFoto, leggiSopralluogo, leggiTecnico, salvaSopralluogo } from '../lib/db';
 import type { Catalogo, Sopralluogo } from '../lib/types';
 import Step1Attivita from './Step1Attivita';
@@ -35,6 +36,15 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
   const daSalvare = useRef<Sopralluogo | null>(null);
   const timer = useRef<number | undefined>(undefined);
 
+  // aperto nell'editor: le versioni in arrivo da altri dispositivi lo aggiornano alla chiusura
+  useEffect(() => {
+    impostaAperto(id);
+    return () => {
+      impostaAperto(null);
+      programmaSync(1000);
+    };
+  }, [id]);
+
   // ---- caricamento ----
   useEffect(() => {
     leggiSopralluogo(id)
@@ -51,6 +61,7 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
     try {
       await salvaSopralluogo(x);
       setStato((st) => (daSalvare.current ? st : 'salvato'));
+      programmaSync(5000);
     } catch {
       setStato('errore');
     }

@@ -11,6 +11,9 @@ import {
 } from '../lib/db';
 import type { Catalogo, Sopralluogo } from '../lib/types';
 import ImpostazioniTecnico from './ImpostazioniTecnico';
+import Sincronizzazione from './Sincronizzazione';
+import { programmaSync, type StatoAutoSync } from '../lib/autosync';
+import { registraEliminazione } from '../lib/sync';
 import { dataItaliana, oggiISO } from '../lib/util';
 
 interface Props {
@@ -33,6 +36,13 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
       .catch(() => setElenco([]));
   useEffect(() => {
     ricarica();
+    // arrivati sopralluoghi da altri dispositivi: aggiorna l'elenco
+    const agg = (e: Event) => {
+      const d = (e as CustomEvent<StatoAutoSync>).detail;
+      if (d.stato === 'ok' && (d.esito.ricevuti || d.esito.eliminati)) ricarica();
+    };
+    window.addEventListener('roa-sync', agg);
+    return () => window.removeEventListener('roa-sync', agg);
   }, []);
 
   async function nuovo() {
@@ -44,6 +54,7 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
   async function duplica(id: string) {
     setMenuAperto(null);
     const c = await duplicaSopralluogo(id);
+    programmaSync();
     await ricarica();
     if (c) setMessaggio(`Creata la copia “${titoloBreve(c) || 'sopralluogo'}”.`);
   }
@@ -53,6 +64,8 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
     const nome = titoloBreve(s) || 'senza nome';
     if (!confirm(`Eliminare definitivamente il sopralluogo “${nome}” con tutte le sue foto?`)) return;
     await eliminaSopralluogo(s.id);
+    await registraEliminazione(s.id);
+    programmaSync(1000);
     await ricarica();
     setMessaggio('Sopralluogo eliminato.');
   }
@@ -66,6 +79,7 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
   async function importa(file: File) {
     try {
       const e = await importaBackup(await file.text());
+      programmaSync(1000);
       await ricarica();
       setMessaggio(
         `Importati ${e.importati} sopralluoghi (${e.foto} foto).` +
@@ -163,6 +177,8 @@ export default function Home({ catalogo, catalogoPersonalizzato, onCatalogoCambi
             );
           })}
         </ul>
+
+        <Sincronizzazione />
 
         <ImpostazioniTecnico />
 
