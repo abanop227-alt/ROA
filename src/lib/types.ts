@@ -259,6 +259,8 @@ export interface Sopralluogo {
   pratica?: Pratica;
   /** elenco di controllo dei documenti della pratica (SCIA e rinnovo): chiave → presente */
   documenti?: Record<string, boolean>;
+  /** dati per compilare i moduli VV.F. */
+  moduli?: DatiModuli;
 }
 
 export interface FotoRecord {
@@ -271,6 +273,64 @@ export interface FotoRecord {
   creato: number;
 }
 
+// ======================= Moduli VV.F. =======================
+
+export interface IndirizzoModulo {
+  indirizzo: string;
+  civico: string;
+  cap: string;
+  comune: string;
+  provincia: string;
+  telefono: string;
+}
+
+export interface PersonaModulo extends IndirizzoModulo {
+  cognome: string;
+  nome: string;
+}
+
+/** Dati del professionista antincendio (impostazioni del dispositivo): compilano MOD. PIN 2.1, 3.1 e i recapiti dei moduli. */
+export interface ProfessionistaVvf {
+  titolo: string; // GEOM.
+  cognome: string;
+  nome: string;
+  collegio: string; // COLLEGIO GEOM.
+  alboProvincia: string;
+  alboNumero: string;
+  codiceMI: string;
+  ufficio: IndirizzoModulo;
+  email: string;
+  pec: string;
+  /** delegato al ritiro (facoltativo) */
+  delegato: PersonaModulo & { titolo: string };
+}
+
+export interface RigaVersamento {
+  n: string;
+  sotto: string;
+  importo: string;
+}
+
+/** Dati della pratica per i moduli (si compilano una volta e valgono per tutti i moduli della pratica). */
+export interface DatiModuli {
+  comando: string; // provincia del Comando VV.F.
+  titolare: PersonaModulo & { codiceFiscale: string; qualifica: string; email: string; pec: string };
+  ragione: string;
+  sede: IndirizzoModulo;
+  attivita: IndirizzoModulo & { tipo: string; classe: string; altre: string };
+  /** MOD. PIN 3: SCIA / rinnovo precedente (es. RINNOVO CPI DEL 28/04/2021) */
+  sciaPrecedente: string;
+  /** MOD. PIN 3.1: a firma di */
+  sciaFirma: string;
+  /** MOD. PIN 3.1: data del sopralluogo (yyyy-mm-dd) */
+  dataSopralluogo: string;
+  allegaAsseverazione: boolean;
+  versamentoTotale: string;
+  versamento: RigaVersamento[];
+  /** MOD. PIN 3.1, sezione A: impianti di protezione attiva verificati */
+  impianti: { attivo: boolean; testo: string }[];
+}
+
 export interface Tecnico {
   /** righe dell'intestazione nella parte generale */
   intestazione: string;
@@ -279,4 +339,6 @@ export interface Tecnico {
   societa: string;
   iniziali: string;
   revisione: string;
+  /** dati per i moduli VV.F. (facoltativi) */
+  vvf?: ProfessionistaVvf;
 }

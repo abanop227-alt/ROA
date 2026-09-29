@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg,ico,json,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,json,webmanifest,docx}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: '/ROA/index.html',
       },

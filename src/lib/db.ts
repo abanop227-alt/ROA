@@ -1,6 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Stabile } from './stabili';
-import type { Catalogo, FotoRecord, Sopralluogo, Tecnico } from './types';
+import type { Catalogo, DatiModuli, FotoRecord, Sopralluogo, Tecnico } from './types';
 import { tecnicoVuoto } from './catalogo';
 import { nuovoId } from './util';
 
@@ -186,4 +186,24 @@ export async function eliminaStabiliDi(origine: string): Promise<void> {
   const tx = (await db()).transaction('stabili', 'readwrite');
   for await (const cur of tx.store.index('origine').iterate(origine)) await cur.delete();
   await tx.done;
+}
+
+// ---- rubrica degli amministratori (titolare dei moduli VV.F., solo su questo dispositivo) ----
+
+type Titolare = DatiModuli['titolare'];
+const chiaveAmministratore = (nome: string) => nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+export async function leggiAmministratore(nome: string): Promise<Titolare | undefined> {
+  const k = chiaveAmministratore(nome);
+  if (!k) return undefined;
+  const r = (await (await db()).get('impostazioni', 'amministratori')) as Record<string, Titolare> | undefined;
+  return r?.[k];
+}
+
+export async function salvaAmministratore(nome: string, titolare: Titolare): Promise<void> {
+  const k = chiaveAmministratore(nome);
+  if (!k || !titolare.cognome.trim()) return;
+  const d = await db();
+  const r = ((await d.get('impostazioni', 'amministratori')) as Record<string, Titolare> | undefined) ?? {};
+  await d.put('impostazioni', { ...r, [k]: titolare }, 'amministratori');
 }
