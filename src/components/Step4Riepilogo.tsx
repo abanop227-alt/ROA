@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { contaSegnaposto, nonAggravioEffettivo, nuovaRigaExtra, testoConclusioni, vociSelezionate } from '../lib/catalogo';
+import { nonAggravioEffettivo, nuovaRigaExtra, testoConclusioni, vociSelezionate } from '../lib/catalogo';
 import { totaleComplessivo, zoneComputo, type RigaCalcolata } from '../lib/computo';
+import { controlliPreGenerazione } from '../lib/controlli';
 import { formatNumero } from '../lib/numeri';
 import type { Catalogo, RigaComputo, Sopralluogo } from '../lib/types';
 import { AreaTesto } from './Campo';
@@ -16,6 +17,7 @@ interface Props {
   erroreDoc: string | null;
   onCondividi: () => void;
   onScarica: () => void;
+  onVaiPasso?: (passo: number) => void;
 }
 
 export default function Step4Riepilogo(p: Props) {
@@ -25,7 +27,7 @@ export default function Step4Riepilogo(p: Props) {
   const zone = zoneComputo(s, catalogo);
   const totale = totaleComplessivo(zone);
   const foto = voci.reduce((n, v) => n + v.fotoIds.length, 0);
-  const daCompletare = voci.filter((v) => contaSegnaposto(v.testo) > 0);
+  const controlli = controlliPreGenerazione(s);
   const tutteLav = Array.from(
     new Set([...catalogo.lavorazioniComuni, ...catalogo.famiglie.flatMap((f) => f.sezioni.flatMap((x) => x.voci.flatMap((v) => v.lavorazioni)))].map((l) => l.descrizione)),
   );
@@ -83,14 +85,29 @@ export default function Step4Riepilogo(p: Props) {
         </div>
       </div>
 
-      {daCompletare.length > 0 && (
-        <div className="promemoria">
-          <span>
-            {daCompletare.length === 1 ? '1 frase contiene' : `${daCompletare.length} frasi contengono`} ancora parti tra <b>[parentesi]</b>{' '}
-            (evidenziate in giallo nel Word): {daCompletare.map((v) => v.titolo).join('; ')}.
-          </span>
-        </div>
-      )}
+      <div className={`controlli ${controlli.some((c) => c.livello === 'errore') ? 'con-errori' : ''}`}>
+        <h3 className="titolo-sezione">Controlli prima del Word</h3>
+        {controlli.length === 0 ? (
+          <p className="ok">✓ Nessun problema trovato.</p>
+        ) : (
+          <ul>
+            {controlli.map((c, i) => (
+              <li key={i} className={c.livello}>
+                <span>
+                  {c.livello === 'errore' ? '⚠ ' : 'ℹ '}
+                  {c.testo}
+                </span>
+                {c.passo !== undefined && p.onVaiPasso && (
+                  <button className="btn btn-piccolo btn-testo" onClick={() => p.onVaiPasso?.(c.passo!)}>
+                    Correggi
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="muto piccolo">I controlli non bloccano la generazione del Word: le parti tra [parentesi] restano evidenziate in giallo.</p>
+      </div>
 
       <h3 className="titolo-sezione">Computo metrico</h3>
       <p className="muto piccolo">Righe proposte dalle frasi spuntate. Prezzi facoltativi: se vuoti restano vuoti nel Word.</p>

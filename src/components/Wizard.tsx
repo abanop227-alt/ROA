@@ -209,6 +209,7 @@ export default function Wizard({ id, passo, catalogo, onPasso, onEsci }: Props) 
             erroreDoc={erroreDoc}
             onCondividi={() => doc && condividi(doc.file, doc.file.name).catch((e) => setErroreDoc(String(e)))}
             onScarica={() => doc && scarica(doc.file, doc.file.name)}
+            onVaiPasso={onPasso}
           />
         )}
       </main>
