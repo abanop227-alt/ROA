@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { elencaStabili, eliminaStabiliDi, importaStabiliDb } from '../lib/db';
+import { elencaStabili, eliminaFileStabili, eliminaStabiliDi, importaStabiliDb, salvaFileStabili } from '../lib/db';
 import { leggiStabiliXlsx } from '../lib/stabili';
 
 /** Importazione degli elenchi "Stabili <amministrazione>.xlsx": restano solo su questo dispositivo. */
@@ -26,6 +26,7 @@ export default function ImportaStabili() {
       try {
         const stabili = await leggiStabiliXlsx(await f.arrayBuffer(), f.name);
         await importaStabiliDb(stabili, f.name);
+        await salvaFileStabili(f.name, f);
         esiti.push(`${f.name}: ${stabili.length} stabili`);
       } catch (e) {
         esiti.push(`${f.name}: ${(e as Error).message}`);
@@ -58,6 +59,7 @@ export default function ImportaStabili() {
               onClick={async () => {
                 if (confirm(`Togliere gli stabili importati da “${f.origine}”?`)) {
                   await eliminaStabiliDi(f.origine);
+                  await eliminaFileStabili(f.origine);
                   ricarica();
                 }
               }}

@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import type { Commessa } from './commesse';
 import type { Stabile } from './stabili';
 import type { Catalogo, DatiModuli, FotoRecord, Sopralluogo, Tecnico } from './types';
 import { tecnicoVuoto } from './catalogo';
@@ -206,4 +207,56 @@ export async function salvaAmministratore(nome: string, titolare: Titolare): Pro
   const d = await db();
   const r = ((await d.get('impostazioni', 'amministratori')) as Record<string, Titolare> | undefined) ?? {};
   await d.put('impostazioni', { ...r, [k]: titolare }, 'amministratori');
+}
+
+// ---- elenco lavori importato e file Excel originali degli stabili (solo su questo dispositivo) ----
+
+export interface CommesseImportate {
+  righe: Commessa[];
+  file: string;
+  importato: number;
+}
+
+export async function leggiCommesseImportate(): Promise<CommesseImportate | undefined> {
+  return (await (await db()).get('impostazioni', 'commesse')) as CommesseImportate | undefined;
+}
+
+export async function salvaCommesseImportate(c: CommesseImportate | null): Promise<void> {
+  const d = await db();
+  if (c) await d.put('impostazioni', c, 'commesse');
+  else await d.delete('impostazioni', 'commesse');
+}
+
+/** Il file Excel originale di un elenco stabili: serve per produrne la copia aggiornata. */
+export async function salvaFileStabili(origine: string, blob: Blob): Promise<void> {
+  await (await db()).put('impostazioni', blob, `stabiliFile:${origine}`);
+}
+
+export async function leggiFileStabili(origine: string): Promise<Blob | undefined> {
+  return (await (await db()).get('impostazioni', `stabiliFile:${origine}`)) as Blob | undefined;
+}
+
+export async function eliminaFileStabili(origine: string): Promise<void> {
+  await (await db()).delete('impostazioni', `stabiliFile:${origine}`);
+}
+
+// ---- cartella dell'archivio (solo computer con File System Access) ----
+
+export async function leggiCartellaArchivio(): Promise<FileSystemDirectoryHandle | undefined> {
+  return (await (await db()).get('impostazioni', 'cartellaArchivio')) as FileSystemDirectoryHandle | undefined;
+}
+
+export async function salvaCartellaArchivio(h: FileSystemDirectoryHandle | null): Promise<void> {
+  const d = await db();
+  if (h) await d.put('impostazioni', h, 'cartellaArchivio');
+  else await d.delete('impostazioni', 'cartellaArchivio');
+}
+
+/** Impostazioni semplici (booleani, testi) del dispositivo. */
+export async function leggiImpostazione<T>(chiave: string): Promise<T | undefined> {
+  return (await (await db()).get('impostazioni', chiave)) as T | undefined;
+}
+
+export async function salvaImpostazione(chiave: string, valore: unknown): Promise<void> {
+  await (await db()).put('impostazioni', valore, chiave);
 }
