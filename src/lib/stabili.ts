@@ -28,6 +28,9 @@ export interface Stabile {
   amministrazione: string;
   /** file di provenienza */
   origine: string;
+  /** posizione nel file Excel (per aggiornarlo): nome del foglio e numero di riga */
+  foglio?: string;
+  riga?: number;
 }
 
 type Riga = Map<string, string>;
@@ -86,14 +89,14 @@ export async function leggiFogli(dati: ArrayBuffer | Uint8Array | Blob): Promise
   return fogli;
 }
 
-const seriale = (t: string): string | null => {
+export const seriale = (t: string): string | null => {
   if (!/^\d{5}(\.\d+)?$/.test(t)) return null;
   const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(Number(t)) * 86_400_000);
   return d.toISOString().slice(0, 10);
 };
 
 /** "45797" → "2025-05-20"; "2031" resta anno; il resto invariato. */
-function normalizzaData(t: string): string {
+export function normalizzaData(t: string): string {
   return seriale(t) ?? t;
 }
 
@@ -115,7 +118,7 @@ const REGEX_CIVICO = /^(n\S{0,2}\s*)?civ(ico)?\.?$/;
 const REGEX_CAP = /^c\.?a\.?p\.?$/;
 
 /** Trova le colonne dalle intestazioni; restituisce anche la riga in cui si trovano. */
-function colonne(righe: Map<number, Riga>): { riga: number; col: Record<string, string> } | null {
+export function colonne(righe: Map<number, Riga>): { riga: number; col: Record<string, string> } | null {
   for (const [n, r] of righe) {
     const voci = [...r.entries()].map(([c, t]) => [c, t.toLowerCase()] as const);
     if (!voci.some(([, t]) => REGEX_CIVICO.test(t)) || !voci.some(([, t]) => REGEX_CAP.test(t))) continue;
@@ -146,7 +149,7 @@ function colonne(righe: Map<number, Riga>): { riga: number; col: Record<string, 
   return null;
 }
 
-const indiceColonna = (c: string) => [...c].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+export const indiceColonna = (c: string) => [...c].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
 
 const TIPO_VIA = /^(via|viale|v\.le|piazza|p\.zza|p\.le|piazzale|corso|c\.so|largo|l\.go|vicolo|strada|str\.|alzaia|lungo|circonvallazione)$/i;
 
@@ -193,6 +196,8 @@ function stabiliDaFoglio(f: Foglio, nomeFile: string): Stabile[] {
       note: g('note'),
       amministrazione: amm,
       origine: nomeFile,
+      foglio: f.nome,
+      riga: n,
     });
   }
   return out;
