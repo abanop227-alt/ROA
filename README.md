@@ -18,6 +18,13 @@ Nata dalla app "ROA Antincendio"; il repository e l'indirizzo di pubblicazione (
 - **SCIA e rinnovo**: stato, numero pratica VV.F., protocollo PEC, data di presentazione, scadenza del rinnovo
   (5 anni; 10 per le attività 6, 7, 8, 64, 71, 72, 77; termine minore se le attività non sono indipendenti) ed elenco di
   controllo dei documenti.
+- **Moduli VV.F.**: MOD. PIN 3 e 3.1 (rinnovo) e MOD. PIN 2 e 2.1 (SCIA) compilati dai moduli ufficiali con i dati del titolare,
+  del condominio, delle attività e del professionista (impostazioni del dispositivo). I modelli sono in `public/moduli/` e si costruiscono dai
+  moduli ufficiali vuoti con `python scripts/moduli/costruisci_moduli.py` (vedi il file per gli altri moduli PIN).
+- **Stabili**: importazione degli Excel "Stabili … .xlsx" (anagrafica, ricerca nel passo Condominio) e copia aggiornata di ogni elenco con
+  ROA, SCIA, rinnovo e scadenza ricavati dalle pratiche.
+- **Elenco lavori e resoconti**: import di "ELENCO LAVORI 2026.xlsx", righe aggiornate dallo stato delle pratiche, resoconto mensile per
+  amministrazione (Word ed Excel) e cartella `_AGGIORNAMENTI` dell'archivio scritta dal computer (aggiornamento automatico all'apertura).
 - **Foto**: ridotte a 1600 px, importate nell'ordine di scatto.
 - **Backup** `.json` con foto e **sincronizzazione** tra dispositivi e colleghi tramite un repository GitHub privato
   (per ogni pratica vince la modifica più recente).
@@ -32,6 +39,9 @@ Nata dalla app "ROA Antincendio"; il repository e l'indirizzo di pubblicazione (
 | Word della ROA e assemblaggio comune | `src/lib/docx.ts` |
 | Word della prova idranti e calcolo | `src/lib/docxIdranti.ts`, `src/lib/idranti.ts` |
 | Pratiche, stati, scadenze, documenti | `src/lib/pratiche.ts` |
+| Moduli VV.F. | `src/lib/moduliVvf.ts`, `scripts/moduli/costruisci_moduli.py`, `public/moduli/` |
+| Stabili e loro aggiornamento | `src/lib/stabili.ts`, `src/lib/stabiliAggiornati.ts` |
+| Elenco lavori, resoconti, archivio | `src/lib/commesse.ts`, `src/lib/resoconto.ts`, `src/lib/aggiornamenti.ts`, `src/lib/archivio.ts` |
 | Controlli prima del Word | `src/lib/controlli.ts` |
 | Computo e Excel | `src/lib/computo.ts`, `src/lib/computoXlsx.ts` |
 | Salvataggio e backup | `src/lib/db.ts`, `src/lib/backup.ts` |
