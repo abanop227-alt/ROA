@@ -86,6 +86,12 @@ export async function duplicaSopralluogo(id: string): Promise<Sopralluogo | unde
   copia.condominio.nome = `${orig.condominio.nome || orig.condominio.indirizzo || 'Sopralluogo'} (copia)`;
   copia.voci = copia.voci.map((v) => ({ ...v, fotoIds: v.fotoIds.map((x) => mappa.get(x)).filter((x): x is string => !!x) }));
   copia.fotoCopertinaId = (orig.fotoCopertinaId && mappa.get(orig.fotoCopertinaId)) || null;
+  if (copia.provaIdranti) {
+    const rimappa = (ids: string[]) => ids.map((x) => mappa.get(x)).filter((x): x is string => !!x);
+    copia.provaIdranti.fotoAttaccoIds = rimappa(copia.provaIdranti.fotoAttaccoIds);
+    copia.provaIdranti.fotoProvaIds = rimappa(copia.provaIdranti.fotoProvaIds);
+    copia.provaIdranti.fotoRapportoIds = rimappa(copia.provaIdranti.fotoRapportoIds);
+  }
   const tx = d.transaction(['sopralluoghi', 'foto'], 'readwrite');
   await tx.objectStore('sopralluoghi').put(copia);
   for (const f of copieFoto) await tx.objectStore('foto').put(f);

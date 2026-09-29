@@ -8,6 +8,7 @@
 // Regola: per ogni sopralluogo vince la versione con "modificato" più recente.
 // Tutto avviene dal browser con la chiave di accesso (token) salvata sul dispositivo.
 import { base64ToBytes, bytesToBase64 } from './base64';
+import { fotoUsate } from './catalogo';
 import { db } from './db';
 import type { FotoRecord, Sopralluogo } from './types';
 
@@ -286,7 +287,7 @@ async function esegui({ fetch: f = fetch, aperto = null }: { fetch?: Fetch; aper
     if (stato.versioni[s.id] === s.modificato || rimandati.has(s.id)) continue;
     const percorso = percorsoSopralluogo(s.id);
     const foto = await d.getAllFromIndex('foto', 'sopralluogoId', s.id);
-    const usate = new Set([...s.voci.flatMap((v) => v.fotoIds), ...(s.fotoCopertinaId ? [s.fotoCopertinaId] : [])]);
+    const usate = new Set(fotoUsate(s));
     const meta: FileSopralluogo['foto'] = [];
     for (const ft of foto) {
       if (!usate.has(ft.id)) continue;

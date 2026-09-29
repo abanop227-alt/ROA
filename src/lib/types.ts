@@ -169,6 +169,45 @@ export interface Cartello {
   descrizione: string;
 }
 
+/** Una misura della prova idranti: pressioni in bar; la portata si calcola o si scrive se già misurata. */
+export interface MisuraIdranti {
+  pStatica: string;
+  pEfflusso: string;
+  /** portata già misurata dallo strumento (l/min): se c'è, non si calcola */
+  portataMisurata: string;
+}
+
+/** Prova di pressione e portata della rete idranti: produce un secondo Word, separato dalla ROA. */
+export interface ProvaIdranti {
+  attiva: boolean;
+  /** codice dell'attività a cui si riferisce (es. 75.2.B) */
+  attivita: string;
+  dataProva: string; // yyyy-mm-dd
+  /** es. "Verifica del § 6.1.4 del D.M. 01/02/1986 per ATT. 75.2.B." */
+  riferimento: string;
+  /** titolo della zona nel documento (AUTORIMESSA, EDIFICIO…) */
+  zona: string;
+  /** descrizione dell'impianto (piani, idranti, attacco autopompa) */
+  descrizioneImpianto: string;
+  /** es. "al momento del collaudo del gruppo di pompaggio" */
+  circostanza: string;
+  /** se la prova l'ha fatta un'altra ditta: nome e riferimento del rapporto */
+  eseguitaDa: string;
+  idrantiTotali: string;
+  idrantiAperti: string;
+  strumento: string;
+  /** coefficiente K dello strumento (tabella dello strumento in uso) */
+  coefficienteK: string;
+  /** portata minima richiesta all'idrante più sfavorito, l/min */
+  portataMinima: string;
+  misure: MisuraIdranti[];
+  note: string;
+  fotoAttaccoIds: string[];
+  fotoProvaIds: string[];
+  /** pagine/foto del rapporto della ditta, in allegato al documento */
+  fotoRapportoIds: string[];
+}
+
 export interface Sopralluogo {
   versione: 2;
   id: string;
@@ -187,6 +226,8 @@ export interface Sopralluogo {
   nonAggravio: boolean | null;
   /** null = testo generato automaticamente */
   conclusioni: string | null;
+  /** prova di pressione e portata degli idranti (facoltativa) */
+  provaIdranti?: ProvaIdranti | null;
 }
 
 export interface FotoRecord {

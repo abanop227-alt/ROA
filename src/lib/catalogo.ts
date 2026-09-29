@@ -460,6 +460,16 @@ export function numerazioneFoto(s: Sopralluogo): Map<string, number[]> {
   return out;
 }
 
+/** Tutte le foto usate dal sopralluogo: frasi, copertina e prova idranti (queste si sincronizzano e si copiano). */
+export function fotoUsate(s: Sopralluogo): string[] {
+  const pi = s.provaIdranti;
+  return [
+    ...s.voci.flatMap((v) => v.fotoIds),
+    ...(s.fotoCopertinaId ? [s.fotoCopertinaId] : []),
+    ...(pi ? [...pi.fotoAttaccoIds, ...pi.fotoProvaIds, ...pi.fotoRapportoIds] : []),
+  ];
+}
+
 export function nonAggravioEffettivo(s: Sopralluogo): boolean {
   return s.nonAggravio ?? vociSelezionate(s).some((v) => v.nonAggravio);
 }
