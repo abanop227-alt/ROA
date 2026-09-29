@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { nonAggravioEffettivo, nuovaRigaExtra, testoConclusioni, vociSelezionate } from '../lib/catalogo';
 import { totaleComplessivo, zoneComputo, type RigaCalcolata } from '../lib/computo';
 import { controlliPreGenerazione } from '../lib/controlli';
+import { scarica } from '../lib/condividi';
+import { applicaPrezzi, esportaComputoXlsx, leggiPrezziXlsx, nomeFileComputo } from '../lib/computoXlsx';
 import { formatNumero } from '../lib/numeri';
 import type { Catalogo, RigaComputo, Sopralluogo } from '../lib/types';
 import { AreaTesto } from './Campo';
@@ -23,6 +25,8 @@ interface Props {
 export default function Step4Riepilogo(p: Props) {
   const { s, catalogo, aggiorna } = p;
   const [nuovaRiga, setNuovaRiga] = useState<Record<string, string>>({});
+  const [esitoExcel, setEsitoExcel] = useState<string | null>(null);
+  const inputPrezzi = useRef<HTMLInputElement>(null);
   const voci = vociSelezionate(s);
   const zone = zoneComputo(s, catalogo);
   const totale = totaleComplessivo(zone);
@@ -31,6 +35,30 @@ export default function Step4Riepilogo(p: Props) {
   const tutteLav = Array.from(
     new Set([...catalogo.lavorazioniComuni, ...catalogo.famiglie.flatMap((f) => f.sezioni.flatMap((x) => x.voci.flatMap((v) => v.lavorazioni)))].map((l) => l.descrizione)),
   );
+
+  async function esportaExcel() {
+    setEsitoExcel(null);
+    try {
+      scarica(await esportaComputoXlsx(s, catalogo), nomeFileComputo(s));
+    } catch (e) {
+      setEsitoExcel(`Esportazione non riuscita: ${(e as Error).message}`);
+    }
+  }
+
+  async function importaPrezzi(file: File) {
+    try {
+      const letti = await leggiPrezziXlsx(await file.arrayBuffer());
+      const e = applicaPrezzi(s, letti);
+      aggiorna((x) => applicaPrezzi(x, letti).s);
+      setEsitoExcel(
+        e.applicati
+          ? `Importati ${e.applicati} prezzi.${e.sconosciute ? ` ${e.sconosciute} righe del file non corrispondono più al computo e sono state ignorate.` : ''}`
+          : 'Nessun prezzo trovato nel file: hai compilato la colonna “Prezzo € (unitario)”?',
+      );
+    } catch (err) {
+      setEsitoExcel(`Importazione non riuscita: ${(err as Error).message}`);
+    }
+  }
 
   /** Modifica una riga del computo, che sia di una voce o aggiuntiva. */
   function modificaRiga(r: RigaCalcolata, campi: Partial<RigaComputo>) {
@@ -111,6 +139,27 @@ export default function Step4Riepilogo(p: Props) {
 
       <h3 className="titolo-sezione">Computo metrico</h3>
       <p className="muto piccolo">Righe proposte dalle frasi spuntate. Prezzi facoltativi: se vuoti restano vuoti nel Word.</p>
+      <div className="riga-pulsanti">
+        <button className="btn" onClick={esportaExcel} disabled={!zone.length}>
+          Esporta computo in Excel
+        </button>
+        <button className="btn" onClick={() => inputPrezzi.current?.click()}>
+          Importa prezzi da Excel
+        </button>
+        <input
+          ref={inputPrezzi}
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = '';
+            if (f) importaPrezzi(f);
+          }}
+        />
+      </div>
+      <p className="muto piccolo">Il file esportato va al collega che mette i prezzi; quando lo restituisce, importalo qui e i prezzi finiscono nelle righe giuste.</p>
+      {esitoExcel && <p className="promemoria">{esitoExcel}</p>}
       {zoneVisibili.map(({ codice, zona }) => (
         <div key={codice} className="zona-computo">
           <h4 className="zona-titolo">
